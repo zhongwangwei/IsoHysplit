@@ -13,7 +13,9 @@
   hysplit       = ../exec/hyts_std_Mac
   get_bulktraj  = False  # whether calculate trajectories
   plot_bulktraj_with_humidity = False
-  plot_bulktraj_with_moisture_flux = True
+  plot_bulktraj_with_moisture_flux = False
+  plot_bulktraj_with_moisturetake = True
+  plot_bulktraj_with_startpoint_endpoint = True
   get_isotope_D = False 
   get_isotope_O = False
   get_cluster   = False

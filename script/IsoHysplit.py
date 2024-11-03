@@ -77,6 +77,9 @@ def main():
         sys.exit(1)
         
     nml = preprocess_nml(namelist_file)
+    lonx = nml['general']['location'][1]
+    latx = nml['general']['location'][0]
+    print(f"latx: {latx}, lonx: {lonx}")
     if nml['general']['get_bulktraj']:
         print('generating bulk trajectories')
         generate_bulktraj(nml['general']['basename'], nml['general']['working_dir'], nml['general']['storage_dir'], nml['general']['meteo_dir'],
@@ -89,11 +92,16 @@ def main():
     if nml['general']['plot_bulktraj_with_humidity']:
         print(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
         trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        plot_bulktraj_with_humidity(trajgroup,nml['plot']['mapcorners'])
+        plot_bulktraj_with_humidity(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
         print('plotting bulk trajectories with humidity')
     if nml['general']['plot_bulktraj_with_moisture_flux']:
         print('plotting bulk trajectories with moisture flux')
-        plot_bulktraj_with_moisture_flux(trajgroup,nml['plot']['mapcorners'])
+        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+        plot_bulktraj_with_moisture_flux(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    if nml['general']['plot_bulktraj_with_moisturetake']:
+        print('plotting bulk trajectories with moisture take')
+        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+        plot_bulktraj_with_moisturetake(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
 
 if __name__ == "__main__":
     main()

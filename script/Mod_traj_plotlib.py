@@ -260,7 +260,7 @@ def labelfile_generator(labelfile, example='east'):
                        '  fontstyle=normal   weight=normal   fontsize=15\n',
                        '  38.98  -114.30     Great Basin\\nNational Park\n']}
 
-    if example is not 'east' and example is not 'west':
+    if example != 'east' and example != 'west':
         example = 'east'
 
     labels = lbdict['example']
@@ -314,14 +314,14 @@ def traj_scatter(data, lons, lats, hymap, zorder=19, colormap='default',
         data = np.sqrt(data)
         if not suppress_printmsg:
             print(msg, '\nsqrt normalization')
-    elif cnormalize is not None:
+    elif cnormalize != None:
         try:
             norm = clr.PowerNorm(cnormalize, vmin=vmin, vmax=vmax)
         except:
             pass
 
-    if sizedata is not None:
-        if snormalize is not None:
+    if sizedata != None:
+        if snormalize != None:
             sizedata = transform_dict[snormalize](sizedata)
         size = sizedata * size
 
@@ -390,7 +390,7 @@ def meteo_contouring(hymap, data, longitudes, latitudes, contourf=True,
     if levels is None:
         levels = np.linspace(vmin, vmax, steps)
 
-    if colors is not None:
+    if colors != None:
         colormap = None
 
     if longitudes.ndim == 1 and data.ndim == 2:
@@ -438,7 +438,7 @@ def adjust_contourparams(cm, contours, colors=[None],
             ind = contours.index(level)
             color = colors[ind]
             plt.setp(coll, **kwargs)
-            if color is not None:
+            if color != None:
                 coll.set_color(color)
         else:
             if not othercontours_visible:
@@ -571,7 +571,7 @@ def edit_cbar(cbar, divisions=5, cbar_label=None, tick_fs=16, label_fs=18,
 
     """
     # Adjust ticks and tick labels
-    if divisions is not None:
+    if divisions != None:
         cbar.locator = tk.MaxNLocator(divisions, integer=False)
 
     cbar.ax.tick_params(labelsize=tick_fs, direction=tick_dir,
@@ -579,7 +579,7 @@ def edit_cbar(cbar, divisions=5, cbar_label=None, tick_fs=16, label_fs=18,
     cbar.update_ticks()
 
     # Label colorbar
-    if cbar_label is not None:
+    if cbar_label != None:
         cbar.set_label(cbar_label, labelpad=labelpad, fontsize=label_fs,
                        rotation=rotation)
 
@@ -624,7 +624,8 @@ class MapDesign(object):
                  zmapbound=10, zlatlon=11, lat_labels=['left'],
                  lon_labels=['top'], latlon_labelspacing=(10, 20),
                  latlon_fs=20, latlon_spacing=(10, 20), drawstates=False,
-                 drawoutlines=True, draw_latlons=True, land_alpha=0.85):
+                 drawoutlines=True, draw_latlons=True, land_alpha=0.85,
+                 latx=None, lonx=None):
         """
         Initialize ``MapDesign`` instance.
 
@@ -705,6 +706,10 @@ class MapDesign(object):
             Default True.  Draw and label lines of latitude and longitude.
         land_alpha : float
             Default 0.85.  The alpha value of the continent fill.
+        latx : float, optional
+            Latitude of the location point to plot
+        lonx : float, optional
+            Longitude of the location point to plot
 
         """
         # Initialize
@@ -745,7 +750,7 @@ class MapDesign(object):
         self.draw_latlons = draw_latlons
 
         # Try to set label attributes
-        if maplabels is not None:
+        if maplabels != None:
 
             self.labels, self.labelstyle = labelfile_reader(maplabels[1])
             self.labelgroup = maplabels[0]
@@ -757,6 +762,10 @@ class MapDesign(object):
                 self.label_zorder = 15
         else:
             self.labels = None
+
+        # Store latx and lonx as instance attributes
+        self.latx = latx
+        self.lonx = lonx
 
     def _set_latlonlabels(self, lat_labels, lon_labels):
         """
@@ -860,9 +869,13 @@ class MapDesign(object):
             ax.set_extent([self.mapcorners[0], self.mapcorners[2],
                           self.mapcorners[1], self.mapcorners[3]], 
                          crs=ccrs.PlateCarree())
-
+        # Example usage:  location =  103.820
+        self.add_location_point(ax, lon=self.lonx, lat=self.latx, 
+                        #label="New York City",
+                        color='red',
+                        marker='.')
         # Add features
-        if self.mapcolor is not None:
+        if self.mapcolor != None:
             colors = self.coloropts[self.mapcolor]
             ax.set_facecolor(colors['water'])
             ax.add_feature(cfeature.LAND, facecolor=colors['land'],
@@ -870,7 +883,7 @@ class MapDesign(object):
             
         if self.drawoutlines:
             ax.add_feature(cfeature.COASTLINE, zorder=self.zborder)
-            ax.add_feature(cfeature.BORDERS, zorder=self.zborder)
+           # ax.add_feature(cfeature.BORDERS, zorder=self.zborder)
             
         if self.drawstates:
             ax.add_feature(cfeature.STATES, zorder=self.zborder)
@@ -893,6 +906,51 @@ class MapDesign(object):
             gl.right_labels = bool(self.parallel_labels[1])
 
         return ax
+
+    def add_location_point(self,hymap, lon, lat, marker='*', color='red', size=200, 
+                        label=None, zorder=20, **kwargs):
+        """
+        Add a location point to the map.
+        
+        Parameters
+        ----------
+        hymap : GeoAxes instance
+            The map axes to plot on
+        lon : float
+            Longitude of the location
+        lat : float
+            Latitude of the location
+        marker : str, default '*'
+            The marker style to use
+        color : str or tuple, default 'red'
+            The color of the marker
+        size : float, default 200
+            The size of the marker
+        label : str, optional
+            Label for the location point (for legend)
+        zorder : int, default 20
+            The z-order of the point (higher numbers appear on top)
+        **kwargs
+            Additional keyword arguments passed to scatter()
+            
+        Returns
+        -------
+        scatter : PathCollection
+            The scatter plot object
+        """
+        scatter = hymap.scatter(lon, lat, 
+                            marker=marker,
+                            c=color,
+                            s=size,
+                            label=label,
+                            zorder=zorder,
+                            transform=ccrs.PlateCarree(),
+                            **kwargs)
+        
+        if label != None:
+            hymap.legend()
+            
+        return scatter
 
 
 
