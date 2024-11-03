@@ -6,19 +6,17 @@
   altitudes = 1000
   location = 1.352, 103.820
   runtime = -240
-  working_dir   = /Users/wei/Desktop/IsoHysplit/working
-  storage_dir   = /Users/wei/Desktop/IsoHysplit/output/SG2
-  meteo_dir     = /Users/wei/Desktop/IsoHysplit/Forcing/gdas1-new
-  isotope_dir   = /Users/wei/Desktop/IsoHysplit/isotope
-  hysplit       = /Users/wei/Desktop/IsoHysplit/exec/hyts_std_Mac
+  working_dir   = ../working
+  storage_dir   = ../output/SG2
+  meteo_dir     = ../Forcing/gdas1-new
+  isotope_dir   = ../isotope
+  hysplit       = ../exec/hyts_std_Mac
   get_bulktraj  = False  # whether calculate trajectories
-  get_reverse   = False # only work if [get_bulktraj=True], A 'reverse' trajectory is one launched from the endpoint of an original trajectory, and run in the opposite direction 
-  get_clipped   = False  # only work if [get_bulktraj=True], A 'clipped' trajectory does not require additional calculation, but is a copy of the original trajectory file containing only path information.
+  plot_bulktraj_with_humidity = False
+  plot_bulktraj_with_moisture_flux = True
   get_isotope_D = False 
   get_isotope_O = False
-
-  get_cluster = False
-
+  get_cluster   = False
 /
 
 &SETUP
@@ -43,4 +41,8 @@
  dxf = 1.0
  dyf = 1.0
  dzf = 0.01
+/
+&plot
+mapcorners = 40, -20, 160, 45 #lower-left longitude, lower-left latitude
+
 /

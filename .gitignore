@@ -2,3 +2,6 @@
 /script/a
 /script/b
 .DS_Store
+/Forcing
+/output
+/script/__pycache__

@@ -2,38 +2,71 @@ import os
 import sys
 import subprocess
 import re
+from Mod_nml_read import NamelistReader
+from Mod_traj_gen import generate_bulktraj
+from Mod_traj_group import make_trajectorygroup
+from Mod_traj_plot import *
 
-from Mod_Namelist import *
+def preprocess_nml(namelist_file):
+    """Main function to process namelist file"""
 
-def read_setup(filename):
-    """Read SETUP section from namelist file and save to SETUP.CFG"""
-    with open(filename, 'r') as f:
-        content = f.read()
+    try:
+        reader = NamelistReader()  # Create an instance first
+        nml=reader.get_namelist_attr(namelist_file)
+        print('namelist attributes read')
+        print(nml)
+        reader.write_setup_cfg(nml)
+        print("Successfully created SETUP.CFG")
+    except Exception as e:
+        print(f"Error processing namelist file: {e}")
+        sys.exit(1)
+    # Convert potential list values to strings
+    working_dir = nml['general']['working_dir']
+    storage_dir = nml['general']['storage_dir']
+    meteo_dir = nml['general']['meteo_dir']
+    # If any of these are lists, take the first element
+    if isinstance(working_dir, list): working_dir = working_dir[0]
+    if isinstance(storage_dir, list): storage_dir = storage_dir[0]
+    if isinstance(meteo_dir, list): meteo_dir = meteo_dir[0]
     
-    # Extract SETUP section
-    setup_match = re.search(r'&SETUP\s*(.*?)\s*/\s*$', content, re.MULTILINE | re.DOTALL)
-    if not setup_match:
-        raise ValueError("SETUP section not found in namelist file")
-    
-    setup_text = setup_match.group(1)
-    
-    # Parse parameters
-    params = {}
-    for line in setup_text.strip().split('\n'):
-        line = line.strip()
-        # Remove comments
-        line = line.split('#')[0].strip()
-        if '=' in line:
-            key, value = line.split('=', 1)
-            params[key.strip()] = value.strip()
-    
-    # Write SETUP.CFG
-    with open('../working/SETUP.CFG', 'w') as f:
-        for key, value in params.items():
-            f.write(f"{value.strip(',')}\n")
+    # Convert location coordinates to float
+    location = nml['general']['location']
+    if isinstance(location, list):
+        location = [float(coord) for coord in location]
+    else:
+        location = [float(coord) for coord in location.split(',')]  # If location is a comma-separated string
+    #convert location to tuple
+    location = tuple(location)
+
+    #convert runtime to int
+    runtime = nml['general']['runtime']
+    if isinstance(runtime, list):
+        runtime = int(runtime[0])
+    else:
+        runtime = int(runtime)
+    # Convert basename to string if it's a list
+    basename = nml['general']['basename']
+    if isinstance(basename, list):
+        basename = basename[0]    
+    altitudes = nml['general']['altitudes']
+    if isinstance(altitudes, list):
+        altitudes = [int(alt) for alt in altitudes]  # Convert each altitude to float
+    else:
+        # If it's a single string, split by comma in case multiple altitudes are provided as comma-separated string
+        altitudes = [int(alt.strip()) for alt in str(altitudes).split(',')]
+    # Create storage directory if it doesn't exist
+    os.makedirs(storage_dir, exist_ok=True)     
+    nml['general']['altitudes'] = altitudes
+    nml['general']['location'] = location
+    nml['general']['runtime'] = runtime
+    nml['general']['basename'] = basename
+    nml['general']['working_dir'] = working_dir
+    nml['general']['storage_dir'] = storage_dir
+    nml['general']['meteo_dir'] = meteo_dir
+
+    return nml
 
 def main():
-    """Main function to process namelist file"""
     if len(sys.argv) != 2:
         print("Usage: python IsoHysplit.py <namelist_file>")
         sys.exit(1)
@@ -43,12 +76,24 @@ def main():
         print(f"Error: File {namelist_file} not found")
         sys.exit(1)
         
-    try:
-        read_setup(namelist_file)
-        print("Successfully created SETUP.CFG")
-    except Exception as e:
-        print(f"Error processing namelist file: {e}")
-        sys.exit(1)
+    nml = preprocess_nml(namelist_file)
+    if nml['general']['get_bulktraj']:
+        print('generating bulk trajectories')
+        generate_bulktraj(nml['general']['basename'], nml['general']['working_dir'], nml['general']['storage_dir'], nml['general']['meteo_dir'],
+                         nml['general']['years'], nml['general']['months'], 
+                         nml['general']['hours'], nml['general']['altitudes'], 
+                         nml['general']['location'],  
+                         nml['general']['runtime'],
+                         monthslice=slice(0, 32, 1), get_reverse=True,
+                         get_clipped=True, hysplit=nml['general']['hysplit'])
+    if nml['general']['plot_bulktraj_with_humidity']:
+        print(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+        plot_bulktraj_with_humidity(trajgroup,nml['plot']['mapcorners'])
+        print('plotting bulk trajectories with humidity')
+    if nml['general']['plot_bulktraj_with_moisture_flux']:
+        print('plotting bulk trajectories with moisture flux')
+        plot_bulktraj_with_moisture_flux(trajgroup,nml['plot']['mapcorners'])
 
 if __name__ == "__main__":
     main()

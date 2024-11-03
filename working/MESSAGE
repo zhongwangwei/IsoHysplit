@@ -1,33 +1,33 @@
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.190
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.013
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           1           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.192
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.015
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           2           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.193
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.016
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           3           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.194
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.017
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           4           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.194
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.017
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           5           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.195
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.018
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           6           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.196
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.019
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           7           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
- Simulation Date (CCYYMMDD): 20241025
- Simulation Time (HHMMSS.S): 140415.197
+ Simulation Date (CCYYMMDD): 20241103
+ Simulation Time (HHMMSS.S): 105421.020
  NOTICE metini: MODEL_ID not AWRF in data (kg,kt)           8           1
  Setting DREC(KG,KT)%WVERT=.FALSE. to use default vertical interpolation!
  
