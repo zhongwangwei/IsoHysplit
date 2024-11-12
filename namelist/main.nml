@@ -15,11 +15,16 @@
   plot_bulktraj_with_humidity = False
   plot_bulktraj_with_moisture_flux = False
   plot_bulktraj_with_moisturetake = True
-  plot_bulktraj_with_startpoint_endpoint = True
-  get_isotope_D = False 
-  get_isotope_O = False
+  plot_bulktraj_with_startpoint_endpoint = False
+  plot_bulktraj_with_Delta_D = False
+  plot_bulktraj_with_Delta_O = False
   get_cluster   = False
 /
+
+&plot
+mapcorners = 40, -20, 160, 45 #lower-left longitude, lower-left latitude
+/
+
 
 &SETUP
  tratio = 0.75
@@ -43,8 +48,4 @@
  dxf = 1.0
  dyf = 1.0
  dzf = 0.01
-/
-&plot
-mapcorners = 40, -20, 160, 45 #lower-left longitude, lower-left latitude
-
 /

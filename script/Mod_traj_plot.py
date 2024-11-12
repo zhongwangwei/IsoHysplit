@@ -3,6 +3,7 @@ import numpy as np
 import xarray as xr
 from Mod_traj_plotlib import *
 import os
+from joblib import Parallel, delayed
 
 def plot_bulktraj_with_humidity(trajgroup,mapcorners,latx=1.352,lonx=103.820):
    fig,ax0 = plt.subplots(nrows=1, figsize=(10,7))
@@ -255,90 +256,6 @@ def plot_bulktraj_with_moisturetake(trajgroup,mapcorners,latx=1.352,lonx=103.820
    plt.savefig(f'{output_dir}/moisturetake.png', bbox_inches='tight', dpi=300)
    del(ds,ds1)
 
-def plot_bulktraj_with_moisturetake_new(trajgroup,mapcorners,latx=1.352,lonx=103.820):
-   import matplotlib.pyplot as plt
-   import numpy as np
-   import xarray as xr
-   import pandas as pd
-   from matplotlib import colors
-   import cartopy .crs as ccrs
-   import cartopy.feature as cfeature
-   from matplotlib import cm
-   from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-   import cartopy.feature as cfeature
-   import matplotlib
-   from pylab import rcParams
-
-   def find_nearest(array, value, k):
-      array = np.asarray(array)
-      idx = np.argsort(abs(array - value))[:k]
-      return idx
-
-
-   Intime=pd.date_range("2000-01-15",freq="1M",periods=1)
-   lat=np.arange(-89.5, 90.5, 1.0)
-   lon=np.arange(-179.5, 180.5, 1.0)
-   dq =np.zeros((1,180,360))
-   ds = xr.Dataset({'dq': (('time','lat','lon'), dq),},
-                  coords={'lon': lon, 'lat':lat,'time':(('time'),Intime)})
-
-   moisture = []
-   for traj in trajgroup:
-      traj.calculate_distance()
-      traj.calculate_vector()
-      traj.calculate_moistureflux()
-      traj.load_reversetraj()
-      traj.calculate_integrationerr()
-      traj.moisture_uptake(precipitation=-0.2,evaporation=0.2,interval=6)
-      moisture.append(traj)
-   #print(traj.uptake.below.astype(np.float64).values)
-
-   min_above_total = 0.0
-   max_above_total = 1.0
-
-   for traj in moisture:
-      if traj.uptake.above_total.max() > max_above_total:
-            max_above_total = traj.uptake.dq.max()
-            #print(max_above_total)
-      if traj.uptake.above_total.min() < min_above_total:
-            min_above_total = traj.uptake.above_total.min()
-            #print(min_above_total)
-   for traj in moisture:
-      x=traj.uptake.geometry.apply(lambda p: p.x).values
-      y=traj.uptake.geometry.apply(lambda p: p.y).values
-      for i, ix ,iy in zip(range(len(x)),x,y):
-            iix=find_nearest(lon, ix, 1)
-            iiy=find_nearest(lat, iy, 1)
-            ds.dq[0,iiy,iix]=ds.dq[0,iiy,iix]+np.nan_to_num(traj.uptake.dq.astype(np.float64).values[i].flatten())
-   ds1=ds.dq/ds.dq.sum()
-   outdir = '../output/Moisture_Take'
-   os.makedirs(outdir, exist_ok=True)
-   ds.to_netcdf(f'{outdir}/moisturetake.nc',engine='netcdf4')
-   ds1.to_netcdf(f'{outdir}/moisturetake_fraction.nc',engine='netcdf4')
-   #ds=ds.where(ds>0.01,drop=True)
-   fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
-   standard_pm = None
-   bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
-   map_scatter = bmap_params.make_basemap(ax=ax0)
-   
-   # Plot the data using the existing levels
-   levels = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
-   mappable = map_scatter.contourf(ds.lon, ds.lat, ds.dq[0], levels=levels)
-   
-   # Add colorbar
-   cax_position = [0.2, 0.1, 0.6, 0.05]
-   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
-       tick_fs=14, label_fs=16, 
-       cbar_label='Accumulated specific humidity (g/kg)',
-       labelpad=12)
-   
-   # Save the plot
-   output_dir = '../output/Moisture_Take'
-   os.makedirs(output_dir, exist_ok=True)
-
-   plt.savefig(f'{output_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
-   del(ds,ds1)
-
 def plot_bulktraj_with_startpoint_endpoint(trajgroup,mapcorners,latx=1.352,lonx=103.820):
    import numpy as np
    import xarray as xr
@@ -417,3 +334,256 @@ def plot_bulktraj_with_startpoint_endpoint(trajgroup,mapcorners,latx=1.352,lonx=
       os.makedirs(outdir, exist_ok=True)
       ds_moisture.to_netcdf(f'{outdir}/Moisture_startpoint_endpoint.nc')
       return None
+
+def plot_bulktraj_with_moisturetake_new(trajgroup,mapcorners,latx=1.352,lonx=103.820):
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import xarray as xr
+   import pandas as pd
+   from matplotlib import colors
+   import cartopy .crs as ccrs
+   import cartopy.feature as cfeature
+   from matplotlib import cm
+   from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+   import cartopy.feature as cfeature
+   import matplotlib
+   from pylab import rcParams
+
+   def find_nearest(array, value, k):
+      array = np.asarray(array)
+      idx = np.argsort(abs(array - value))[:k]
+      return idx
+
+
+   Intime=pd.date_range("2000-01-15",freq="1M",periods=1)
+   lat=np.arange(-89, 90.5, 2.0)
+   lon=np.arange(-179, 180.5, 2.0)
+   dq =np.zeros((1,90,180))
+   ds = xr.Dataset({'dq': (('time','lat','lon'), dq),},
+                  coords={'lon': lon, 'lat':lat,'time':(('time'),Intime)})
+
+   moisture = []
+   for traj in trajgroup:
+      traj.calculate_distance()
+      traj.calculate_vector()
+      traj.calculate_moistureflux()
+      traj.load_reversetraj()
+      traj.calculate_integrationerr()
+      traj.moisture_uptake(precipitation=-0.2,evaporation=0.2,interval=6)
+      moisture.append(traj)
+   #print(traj.uptake.below.astype(np.float64).values)
+
+   min_above_total = 0.0
+   max_above_total = 1.0
+
+   for traj in moisture:
+      if traj.uptake.above_total.max() > max_above_total:
+            max_above_total = traj.uptake.dq.max()
+            #print(max_above_total)
+      if traj.uptake.above_total.min() < min_above_total:
+            min_above_total = traj.uptake.above_total.min()
+            #print(min_above_total)
+   for traj in moisture:
+      x=traj.uptake.geometry.apply(lambda p: p.x).values
+      y=traj.uptake.geometry.apply(lambda p: p.y).values
+      for i, ix ,iy in zip(range(len(x)),x,y):
+            iix=find_nearest(lon, ix, 1)
+            iiy=find_nearest(lat, iy, 1)
+            ds.dq[0,iiy,iix]=ds.dq[0,iiy,iix]+np.nan_to_num(traj.uptake.dq.astype(np.float64).values[i].flatten())
+   ds1=ds.dq/ds.dq.sum()
+   outdir = '../output/Moisture_Take'
+   os.makedirs(outdir, exist_ok=True)
+   ds.to_netcdf(f'{outdir}/moisturetake.nc',engine='netcdf4')
+   ds1.to_netcdf(f'{outdir}/moisturetake_fraction.nc',engine='netcdf4')
+   #ds=ds.where(ds>0.01,drop=True)
+   fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   standard_pm = None
+   bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
+   map_scatter = bmap_params.make_basemap(ax=ax0)
+   
+   # Plot the data using pcolormesh instead of contourf to avoid interpolation
+   levels = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+   mappable = map_scatter.pcolormesh(ds.lon, ds.lat, ds.dq[0], 
+                                    vmin=min(levels), 
+                                    vmax=max(levels),
+                                    cmap='viridis')
+   
+   # Add colorbar
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+       tick_fs=14, label_fs=16, 
+       cbar_label='Accumulated specific humidity (g/kg)',
+       labelpad=12)
+   
+   # Save the plot
+   output_dir = '../output/Moisture_Take'
+   os.makedirs(output_dir, exist_ok=True)
+
+   plt.savefig(f'{output_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
+   del(ds,ds1)
+
+
+def plot_bulktraj_with_Delta_D(trajgroup,delta,mapcorners,latx=1.352,lonx=103.820):
+   def process_point(ix, iy, tim, delta):
+      # Find nearest time, lon, lat values in delta dataset
+      time_idx = delta.time.sel(time=tim, method="nearest")
+      try:
+         lat_idx = delta.lat.sel(lat=iy, method="nearest")
+         lon_idx = delta.lon.sel(lon=ix, method="nearest")
+         delta_d_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx).values
+      except:
+         lat_idx = delta.latitude.sel(latitude=iy, method="nearest")
+         lon_idx = delta.longitude.sel(longitude=ix, method="nearest")
+         delta_d_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx).values
+      return delta_d_value
+
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+      # Extract coordinates and data
+      lons = traj.data.geometry.apply(lambda p: p.x).values
+      lats = traj.data.geometry.apply(lambda p: p.y).values
+      times = traj.data.DateTime.values
+      
+      # Create a list to store delta_d values
+      delta_d_values = Parallel(n_jobs=-1)(
+          delayed(process_point)(ix, iy, tim, delta)
+          for ix, iy, tim in zip(lons, lats, times)
+      )
+      
+      # Add the delta_d values as a new column to traj.data
+      traj.data['Delta_D'] = delta_d_values
+   
+   # Create dataset from trajectory group
+   ds = xr.Dataset()
+   
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+       # Extract coordinates and data
+       lons = traj.data.geometry.apply(lambda p: p.x).values
+       lats = traj.data.geometry.apply(lambda p: p.y).values
+       delta_d = traj.data.Delta_D.astype(np.float64).values
+       
+       # Add to dataset with trajectory number as dimension
+       ds[f'trajectory_{i}_delta_d'] = xr.DataArray(
+           data=delta_d,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+
+   # Create output directory if it doesn't exist
+   output_dir = '../output/Delta_D'
+   os.makedirs(output_dir, exist_ok=True)
+
+   # Save to netCDF file
+   ds.to_netcdf(f'{output_dir}/trajectories_with_delta_d.nc')
+
+   # Add plotting section
+   fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   standard_pm = None
+   bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
+   map_scatter = bmap_params.make_basemap(ax=ax0)
+
+   for traj in trajgroup[::1]:
+      mappable = traj_scatter(
+         traj.data.Delta_D.astype(np.float64).values,
+         traj.data.geometry.apply(lambda p: p.x).values,
+         traj.data.geometry.apply(lambda p: p.y).values,
+         map_scatter, colormap=plt.cm.viridis,
+         vmin=-200.0, vmax=-80.0, size=3, suppress_printmsg=True)
+
+   # Make colorbar on its own axis
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+      tick_fs=14, label_fs=16, cbar_label='δD (‰)',
+      labelpad=12)
+
+   # Save the plot
+   output_dir = '../output/Delta_D'
+   plt.savefig(f'{output_dir}/trajectory_delta_d.png', bbox_inches='tight', dpi=300)
+   plt.show()
+
+   
+def plot_bulktraj_with_Delta_18O(trajgroup,delta,mapcorners,latx=1.352,lonx=103.820):
+   def process_point(ix, iy, tim, delta):
+      # Find nearest time, lon, lat values in delta dataset
+      time_idx = delta.time.sel(time=tim, method="nearest")
+      try:
+         lat_idx = delta.lat.sel(lat=iy, method="nearest")
+         lon_idx = delta.lon.sel(lon=ix, method="nearest")
+         delta_d_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx).values
+      except:
+         lat_idx = delta.latitude.sel(latitude=iy, method="nearest")
+         lon_idx = delta.longitude.sel(longitude=ix, method="nearest")
+         delta_d_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx).values
+      return delta_d_value
+
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+      # Extract coordinates and data
+      lons = traj.data.geometry.apply(lambda p: p.x).values
+      lats = traj.data.geometry.apply(lambda p: p.y).values
+      times = traj.data.DateTime.values
+      
+      # Create a list to store delta_d values
+      delta_d_values = Parallel(n_jobs=-1)(
+          delayed(process_point)(ix, iy, tim, delta)
+          for ix, iy, tim in zip(lons, lats, times)
+      )
+      
+      # Add the delta_d values as a new column to traj.data
+      traj.data['Delta_18O'] = delta_d_values
+   
+   # Create dataset from trajectory group
+   ds = xr.Dataset()
+   
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+       # Extract coordinates and data
+       lons = traj.data.geometry.apply(lambda p: p.x).values
+       lats = traj.data.geometry.apply(lambda p: p.y).values
+       delta_d = traj.data.Delta_D.astype(np.float64).values
+       
+       # Add to dataset with trajectory number as dimension
+       ds[f'trajectory_{i}_delta_18O'] = xr.DataArray(
+           data=delta_d,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+
+   # Create output directory if it doesn't exist
+   output_dir = '../output/Delta_18O'
+   os.makedirs(output_dir, exist_ok=True)
+
+   # Save to netCDF file
+   ds.to_netcdf(f'{output_dir}/trajectories_with_delta_18O.nc')
+
+   # Add plotting section
+   fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   standard_pm = None
+   bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
+   map_scatter = bmap_params.make_basemap(ax=ax0)
+
+   for traj in trajgroup[::1]:
+      mappable = traj_scatter(
+         traj.data.Delta_D.astype(np.float64).values,
+         traj.data.geometry.apply(lambda p: p.x).values,
+         traj.data.geometry.apply(lambda p: p.y).values,
+         map_scatter, colormap=plt.cm.viridis,
+         vmin=-30.0, vmax=-8.0, size=3, suppress_printmsg=True)
+
+   # Make colorbar on its own axis
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+      tick_fs=14, label_fs=16, cbar_label='δ^18O (‰)',
+      labelpad=12)
+
+   # Save the plot
+   output_dir = '../output/Delta_18O'
+   plt.savefig(f'{output_dir}/trajectory_delta_18O.png', bbox_inches='tight', dpi=300)
+   plt.show()
+
+   

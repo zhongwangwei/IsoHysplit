@@ -6,3 +6,5 @@
 /output
 /script/__pycache__
 .DS_Store
+*.nc
+.DS_Store

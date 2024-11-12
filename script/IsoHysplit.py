@@ -101,7 +101,12 @@ def main():
     if nml['general']['plot_bulktraj_with_moisturetake']:
         print('plotting bulk trajectories with moisture take')
         trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        plot_bulktraj_with_moisturetake(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
-
+        plot_bulktraj_with_moisturetake_new(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    if nml['general']['plot_bulktraj_with_Delta_D']:
+        print('plotting bulk trajectories with Delta D')
+        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+        with xr.open_dataset('g2005iso-n_pwatclm.nc') as ds:
+            dd=ds['dd']
+        plot_bulktraj_with_Delta_D(trajgroup,dd,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
 if __name__ == "__main__":
     main()
