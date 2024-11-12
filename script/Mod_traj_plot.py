@@ -5,7 +5,7 @@ from Mod_traj_plotlib import *
 import os
 from joblib import Parallel, delayed
 
-def plot_bulktraj_with_humidity(trajgroup,mapcorners,latx=1.352,lonx=103.820):
+def plot_bulktraj_with_humidity(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    fig,ax0 = plt.subplots(nrows=1, figsize=(10,7))
    #param_dict = {'projection':'lcc', 'latlon_labelspacing':(10,30),
    #               'latlon_spacing':(10,15), 'latlon_fs':14}
@@ -60,7 +60,7 @@ def plot_bulktraj_with_humidity(trajgroup,mapcorners,latx=1.352,lonx=103.820):
    ticklabels = cbar.ax.get_xticklabels()
    newlabels = []
    # Create output directory if it doesn't exist
-   output_dir = '../output/plot_bulktraj_with_humidity'
+   output_dir = f'{outdir}/plot_bulktraj_with_humidity'
    os.makedirs(output_dir, exist_ok=True)
 
    # Save the plot
@@ -99,7 +99,7 @@ def plot_bulktraj_with_humidity(trajgroup,mapcorners,latx=1.352,lonx=103.820):
    ds.to_netcdf(f'{output_dir}/Bulktraj_with_humidity.nc')
    plt.show()
 
-def plot_bulktraj_with_moisture_flux(trajgroup,mapcorners,latx=1.352,lonx=103.820):
+def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    for traj in trajgroup:
       traj.calculate_distance()
       traj.calculate_vector()
@@ -146,12 +146,12 @@ def plot_bulktraj_with_moisture_flux(trajgroup,mapcorners,latx=1.352,lonx=103.82
                                  labelpad=12)
    ticklabels = cbar.ax.get_xticklabels()
    newlabels = []
-   output_dir = '../output/Moisture_Flux'
+   output_dir = f'{outdir}/Moisture_Flux'
    os.makedirs(output_dir, exist_ok=True)
 
    plt.savefig(f'{output_dir}/Moisture_Flux.png', bbox_inches='tight', dpi=300)
 
-def plot_bulktraj_with_moisturetake(trajgroup,mapcorners,latx=1.352,lonx=103.820):
+def plot_bulktraj_with_moisturetake(trajgroup,outdir, mapcorners,latx=1.352,lonx=103.820):
    import matplotlib.pyplot as plt
    import numpy as np
    import xarray as xr
@@ -207,10 +207,10 @@ def plot_bulktraj_with_moisturetake(trajgroup,mapcorners,latx=1.352,lonx=103.820
             iiy=find_nearest(lat, iy, 1)
             ds.dq[0,iiy,iix]=ds.dq[0,iiy,iix]+np.nan_to_num(traj.uptake.dq.astype(np.float64).values[i].flatten())
    ds1=ds.dq/ds.dq.sum()
-   outdir = '../output/Moisture_Take'
-   os.makedirs(outdir, exist_ok=True)
-   ds.to_netcdf(f'{outdir}/moisturetake.nc',engine='netcdf4')
-   ds1.to_netcdf(f'{outdir}/moisturetake_fraction.nc',engine='netcdf4')
+   out_dir = f'{outdir}/Moisture_Take'
+   os.makedirs(out_dir, exist_ok=True)
+   ds.to_netcdf(f'{out_dir}/moisturetake.nc',engine='netcdf4')
+   ds1.to_netcdf(f'{out_dir}/moisturetake_fraction.nc',engine='netcdf4')
    ds=ds.where(ds>0.01,drop=True)
    fig = plt.figure()
    ef, ax = plt.subplots(1,1,figsize=(10,5),subplot_kw={'projection': ccrs.PlateCarree()})
@@ -248,15 +248,11 @@ def plot_bulktraj_with_moisturetake(trajgroup,mapcorners,latx=1.352,lonx=103.820
    ax.set_xlabel("")
    # Make it nice
    plt.tight_layout()
-
-   
    # Save the plot
-   output_dir = '../output/Moisture_Take'
-
-   plt.savefig(f'{output_dir}/moisturetake.png', bbox_inches='tight', dpi=300)
+   plt.savefig(f'{out_dir}/moisturetake.png', bbox_inches='tight', dpi=300)
    del(ds,ds1)
 
-def plot_bulktraj_with_startpoint_endpoint(trajgroup,mapcorners,latx=1.352,lonx=103.820):
+def plot_bulktraj_with_startpoint_endpoint(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    import numpy as np
    import xarray as xr
    import pandas as pd
@@ -330,12 +326,12 @@ def plot_bulktraj_with_startpoint_endpoint(trajgroup,mapcorners,latx=1.352,lonx=
       )
       
       # Save to netCDF file
-      outdir = '../output/Moisture_startpoint_endpoint'
-      os.makedirs(outdir, exist_ok=True)
-      ds_moisture.to_netcdf(f'{outdir}/Moisture_startpoint_endpoint.nc')
+      out_dir = f'{outdir}/Moisture_startpoint_endpoint'
+      os.makedirs(out_dir, exist_ok=True)
+      ds_moisture.to_netcdf(f'{out_dir}/Moisture_startpoint_endpoint.nc')
       return None
 
-def plot_bulktraj_with_moisturetake_new(trajgroup,mapcorners,latx=1.352,lonx=103.820):
+def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    import matplotlib.pyplot as plt
    import numpy as np
    import xarray as xr
@@ -391,10 +387,10 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,mapcorners,latx=1.352,lonx=103
             iiy=find_nearest(lat, iy, 1)
             ds.dq[0,iiy,iix]=ds.dq[0,iiy,iix]+np.nan_to_num(traj.uptake.dq.astype(np.float64).values[i].flatten())
    ds1=ds.dq/ds.dq.sum()
-   outdir = '../output/Moisture_Take'
-   os.makedirs(outdir, exist_ok=True)
-   ds.to_netcdf(f'{outdir}/moisturetake.nc',engine='netcdf4')
-   ds1.to_netcdf(f'{outdir}/moisturetake_fraction.nc',engine='netcdf4')
+   out_dir = f'{outdir}/Moisture_Take'
+   os.makedirs(out_dir, exist_ok=True)
+   ds.to_netcdf(f'{out_dir}/moisturetake.nc',engine='netcdf4')
+   ds1.to_netcdf(f'{out_dir}/moisturetake_fraction.nc',engine='netcdf4')
    #ds=ds.where(ds>0.01,drop=True)
    fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
    standard_pm = None
@@ -415,11 +411,9 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,mapcorners,latx=1.352,lonx=103
        cbar_label='Accumulated specific humidity (g/kg)',
        labelpad=12)
    
-   # Save the plot
-   output_dir = '../output/Moisture_Take'
-   os.makedirs(output_dir, exist_ok=True)
 
-   plt.savefig(f'{output_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
+
+   plt.savefig(f'{out_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
    del(ds,ds1)
 
 
@@ -505,19 +499,19 @@ def plot_bulktraj_with_Delta_D(trajgroup,delta,mapcorners,latx=1.352,lonx=103.82
    plt.show()
 
    
-def plot_bulktraj_with_Delta_18O(trajgroup,delta,mapcorners,latx=1.352,lonx=103.820):
+def plot_bulktraj_with_Delta(trajgroup,delta,varname,isotope_type,outdir,mapcorners,latx=1.352,lonx=103.820):
    def process_point(ix, iy, tim, delta):
       # Find nearest time, lon, lat values in delta dataset
       time_idx = delta.time.sel(time=tim, method="nearest")
       try:
          lat_idx = delta.lat.sel(lat=iy, method="nearest")
          lon_idx = delta.lon.sel(lon=ix, method="nearest")
-         delta_d_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx).values
+         delta_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx).values
       except:
          lat_idx = delta.latitude.sel(latitude=iy, method="nearest")
          lon_idx = delta.longitude.sel(longitude=ix, method="nearest")
-         delta_d_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx).values
-      return delta_d_value
+         delta_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx).values
+      return delta_value
 
    # Add trajectory data
    for i, traj in enumerate(trajgroup):
@@ -527,13 +521,13 @@ def plot_bulktraj_with_Delta_18O(trajgroup,delta,mapcorners,latx=1.352,lonx=103.
       times = traj.data.DateTime.values
       
       # Create a list to store delta_d values
-      delta_d_values = Parallel(n_jobs=-1)(
+      delta_values = Parallel(n_jobs=-1)(
           delayed(process_point)(ix, iy, tim, delta)
           for ix, iy, tim in zip(lons, lats, times)
       )
       
       # Add the delta_d values as a new column to traj.data
-      traj.data['Delta_18O'] = delta_d_values
+      traj.data[f'Delta_{isotope_type}'] = delta_values
    
    # Create dataset from trajectory group
    ds = xr.Dataset()
@@ -543,11 +537,11 @@ def plot_bulktraj_with_Delta_18O(trajgroup,delta,mapcorners,latx=1.352,lonx=103.
        # Extract coordinates and data
        lons = traj.data.geometry.apply(lambda p: p.x).values
        lats = traj.data.geometry.apply(lambda p: p.y).values
-       delta_d = traj.data.Delta_D.astype(np.float64).values
+       delta = traj.data[f'Delta_{isotope_type}'].astype(np.float64).values
        
        # Add to dataset with trajectory number as dimension
-       ds[f'trajectory_{i}_delta_18O'] = xr.DataArray(
-           data=delta_d,
+       ds[f'trajectory_{i}_delta_{isotope_type}'] = xr.DataArray(
+           data=delta,
            dims=['Timestep'],
            coords={'Timestep': traj.data.index,
                   'latitude': ('Timestep', lats),
@@ -555,11 +549,22 @@ def plot_bulktraj_with_Delta_18O(trajgroup,delta,mapcorners,latx=1.352,lonx=103.
        )
 
    # Create output directory if it doesn't exist
-   output_dir = '../output/Delta_18O'
+   output_dir = f'{outdir}/Delta_{varname}_{isotope_type}'
    os.makedirs(output_dir, exist_ok=True)
 
    # Save to netCDF file
-   ds.to_netcdf(f'{output_dir}/trajectories_with_delta_18O.nc')
+   ds.to_netcdf(f'{output_dir}/trajectories_with_Delta_{varname}_{isotope_type}.nc')
+
+   # Calculate vmin and vmax based on 5th and 95th percentiles across all trajectories
+   all_delta_values = []
+   for traj in trajgroup:
+       all_delta_values.extend(traj.data[f'Delta_{isotope_type}'].astype(np.float64).values)
+    
+   vmin = np.nanpercentile(all_delta_values, 5)
+   vmax = np.nanpercentile(all_delta_values, 95)
+   # Round vmin and vmax to nearest 10
+   vmin = np.floor(vmin / 10) * 10
+   vmax = np.ceil(vmax / 10) * 10
 
    # Add plotting section
    fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
@@ -567,23 +572,118 @@ def plot_bulktraj_with_Delta_18O(trajgroup,delta,mapcorners,latx=1.352,lonx=103.
    bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
    map_scatter = bmap_params.make_basemap(ax=ax0)
 
+   #set vmin and vmax for the rest of the trajectories
    for traj in trajgroup[::1]:
       mappable = traj_scatter(
-         traj.data.Delta_D.astype(np.float64).values,
+         traj.data[f'Delta_{isotope_type}'].astype(np.float64).values,
          traj.data.geometry.apply(lambda p: p.x).values,
          traj.data.geometry.apply(lambda p: p.y).values,
          map_scatter, colormap=plt.cm.viridis,
-         vmin=-30.0, vmax=-8.0, size=3, suppress_printmsg=True)
+         vmin=vmin, vmax=vmax, size=3, suppress_printmsg=True)
 
    # Make colorbar on its own axis
    cax_position = [0.2, 0.1, 0.6, 0.05]
    cax, cbar = make_cax_cbar(fig, cax_position, mappable,
-      tick_fs=14, label_fs=16, cbar_label='δ^18O (‰)',
+      tick_fs=14, label_fs=16, cbar_label=f'δ^{isotope_type} (‰)',
       labelpad=12)
 
    # Save the plot
-   output_dir = '../output/Delta_18O'
-   plt.savefig(f'{output_dir}/trajectory_delta_18O.png', bbox_inches='tight', dpi=300)
+   plt.savefig(f'{output_dir}/trajectory_delta_{varname}_{isotope_type}.png', bbox_inches='tight', dpi=300)
    plt.show()
 
    
+def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,outdir,mapcorners,latx=1.352,lonx=103.820):
+   def process_point(ix, iy, plev, tim, delta):
+      # Find nearest time, lon, lat values in delta dataset
+      time_idx = delta.time.sel(time=tim, method="nearest")
+      try:
+         lat_idx = delta.lat.sel(lat=iy, method="nearest")
+         lon_idx = delta.lon.sel(lon=ix, method="nearest")
+         level_idx = delta.level.sel(level=plev, method="nearest")
+         delta_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx, level=level_idx).values
+      except:
+         lat_idx = delta.latitude.sel(latitude=iy, method="nearest")
+         lon_idx = delta.longitude.sel(longitude=ix, method="nearest")
+         level_idx = delta.level.sel(level=plev, method="nearest")
+         delta_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx, level=level_idx).values
+      return delta_value
+
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+      # Extract coordinates and data
+      lons = traj.data.geometry.apply(lambda p: p.x).values
+      lats = traj.data.geometry.apply(lambda p: p.y).values
+      times = traj.data.DateTime.values
+      pressure = traj.data.Pressure.astype(np.float64).values
+      
+      # Create a list to store delta_d values
+      delta_values = Parallel(n_jobs=-1)(
+          delayed(process_point)(ix, iy, plev, tim, delta)
+          for ix, iy, plev, tim in zip(lons, lats, pressure, times)
+      )
+      
+      # Add the delta_d values as a new column to traj.data
+      traj.data[f'Delta_{isotope_type}'] = delta_values
+   
+   # Create dataset from trajectory group
+   ds = xr.Dataset()
+   
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+      # Extract coordinates and data
+      lons = traj.data.geometry.apply(lambda p: p.x).values
+      lats = traj.data.geometry.apply(lambda p: p.y).values
+      delta = traj.data[f'Delta_{isotope_type}'].astype(np.float64).values
+      
+      # Add to dataset with trajectory number as dimension
+      ds[f'trajectory_{i}_delta_{isotope_type}'] = xr.DataArray(
+         data=delta,
+         dims=['Timestep'],
+         coords={'Timestep': traj.data.index,
+               'pressure': ('Timestep', pressure),
+               'latitude': ('Timestep', lats),
+               'longitude': ('Timestep', lons)}
+      )
+
+   # Create output directory if it doesn't exist
+   output_dir = f'{outdir}/Delta_{varname}_{isotope_type}'
+   os.makedirs(output_dir, exist_ok=True)
+
+   # Save to netCDF file
+   ds.to_netcdf(f'{output_dir}/trajectories_with_Delta_{varname}_{isotope_type}.nc')
+
+   # Calculate vmin and vmax based on 5th and 95th percentiles across all trajectories
+   all_delta_values = []
+   for traj in trajgroup:
+       all_delta_values.extend(traj.data[f'Delta_{isotope_type}'].astype(np.float64).values)
+    
+   vmin = np.nanpercentile(all_delta_values, 5)
+   vmax = np.nanpercentile(all_delta_values, 95)
+   # Round vmin and vmax to nearest 10
+   vmin = np.floor(vmin / 10) * 10
+   vmax = np.ceil(vmax / 10) * 10
+
+   # Add plotting section
+   fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   standard_pm = None
+   bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
+   map_scatter = bmap_params.make_basemap(ax=ax0)
+
+   #set vmin and vmax for the rest of the trajectories
+   for traj in trajgroup[::1]:
+      mappable = traj_scatter(
+         traj.data[f'Delta_{isotope_type}'].astype(np.float64).values,
+         traj.data.geometry.apply(lambda p: p.x).values,
+         traj.data.geometry.apply(lambda p: p.y).values,
+         map_scatter, colormap=plt.cm.viridis,
+         vmin=vmin, vmax=vmax, size=3, suppress_printmsg=True)
+
+   # Make colorbar on its own axis
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+      tick_fs=14, label_fs=16, cbar_label=f'δ^{isotope_type} (‰)',
+      labelpad=12)
+
+   # Save the plot
+   plt.savefig(f'{output_dir}/trajectory_delta_{varname}_{isotope_type}.png', bbox_inches='tight', dpi=300)
+   plt.show()

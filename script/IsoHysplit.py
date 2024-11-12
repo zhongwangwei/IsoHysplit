@@ -6,7 +6,9 @@ from Mod_nml_read import NamelistReader
 from Mod_traj_gen import generate_bulktraj
 from Mod_traj_group import make_trajectorygroup
 from Mod_traj_plot import *
-
+import pandas as pd
+import xarray as xr
+import glob
 def preprocess_nml(namelist_file):
     """Main function to process namelist file"""
 
@@ -89,24 +91,70 @@ def main():
                          nml['general']['runtime'],
                          monthslice=slice(0, 32, 1), get_reverse=True,
                          get_clipped=True, hysplit=nml['general']['hysplit'])
+    #get trajectory group
+    trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+    #get min and max time
+    min_time = pd.Timestamp.max
+    max_time = pd.Timestamp.min
+    for traj in trajgroup:
+        traj_min = traj.data.DateTime.min()
+        traj_max = traj.data.DateTime.max()
+        min_time = min(min_time, traj_min)
+        max_time = max(max_time, traj_max)
+    # Extract min and max years
+    min_year = min_time.year
+    max_year = max_time.year
+    print(f"Year range of trajectories: {min_year} to {max_year}")
+
+    outdir=f"{nml['general']['storage_dir']}/{nml['general']['basename']}/"
+    os.makedirs(outdir, exist_ok=True)
+
+    # Create list of isotope files for the year range
     if nml['general']['plot_bulktraj_with_humidity']:
-        print(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        plot_bulktraj_with_humidity(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
-        print('plotting bulk trajectories with humidity')
+        plot_bulktraj_with_humidity(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    
     if nml['general']['plot_bulktraj_with_moisture_flux']:
-        print('plotting bulk trajectories with moisture flux')
-        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        plot_bulktraj_with_moisture_flux(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+        plot_bulktraj_with_moisture_flux(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    
     if nml['general']['plot_bulktraj_with_moisturetake']:
-        print('plotting bulk trajectories with moisture take')
-        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        plot_bulktraj_with_moisturetake_new(trajgroup,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
-    if nml['general']['plot_bulktraj_with_Delta_D']:
-        print('plotting bulk trajectories with Delta D')
-        trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
-        with xr.open_dataset('g2005iso-n_pwatclm.nc') as ds:
+        plot_bulktraj_with_moisturetake_new(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    
+    if nml['general']['plot_bulktraj_with_Precipitable_Water_Delta18O']:
+        isotope_dir = nml['general']['isotope_dir']
+        isotope_files = [f"{isotope_dir}/g{year}iso-n.nc" for year in range(min_year, max_year + 1)]
+        print(f"Loading isotope files: {isotope_files}")
+        isotope_files.sort()
+        with xr.open_mfdataset(isotope_files) as ds:
             dd=ds['dd']
-        plot_bulktraj_with_Delta_D(trajgroup,dd,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+        plot_bulktraj_with_Delta(trajgroup,dd,'Precipitable_Water','18O',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    
+    if nml['general']['plot_bulktraj_with_Precipitable_Water_DeltaD']:
+        isotope_dir = nml['general']['isotope_dir']
+        isotope_files = [f"{isotope_dir}/g{year}iso-n.nc" for year in range(min_year, max_year + 1)]
+        print(f"Loading isotope files: {isotope_files}")
+        isotope_files.sort()
+        with xr.open_mfdataset(isotope_files) as ds:
+            dd=ds['dd']
+        plot_bulktraj_with_Delta(trajgroup,dd,'Precipitable_Water','D',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+
+    if nml['general']['plot_bulktraj_with_Precipitation_Water_Delta18O']:
+        isotope_dir = nml['general']['isotope_dir']
+        isotope_files = [f"{isotope_dir}/g{year}iso-n.nc" for year in range(min_year, max_year + 1)]
+        print(f"Loading isotope files: {isotope_files}")
+        isotope_files.sort()
+        with xr.open_mfdataset(isotope_files) as ds:
+            dd=ds['dd']
+        plot_bulktraj_with_Delta(trajgroup,dd,'Precipitation_Water','18O',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    
+    if nml['general']['plot_bulktraj_with_Precipitation_Water_DeltaD']:
+        isotope_dir = nml['general']['isotope_dir']
+        isotope_files = [f"{isotope_dir}/g{year}iso-n.nc" for year in range(min_year, max_year + 1)]
+        print(f"Loading isotope files: {isotope_files}")
+        isotope_files.sort()
+        with xr.open_mfdataset(isotope_files) as ds:
+            dd=ds['dd']
+        plot_bulktraj_with_Delta(trajgroup,dd,'Precipitation_Water','D',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+
+
 if __name__ == "__main__":
     main()

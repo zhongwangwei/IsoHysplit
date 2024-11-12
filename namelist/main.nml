@@ -12,13 +12,17 @@
   isotope_dir   = ../isotope
   hysplit       = ../exec/hyts_std_Mac
   get_bulktraj  = False  # whether calculate trajectories
+  get_cluster   = False
   plot_bulktraj_with_humidity = False
   plot_bulktraj_with_moisture_flux = False
-  plot_bulktraj_with_moisturetake = True
+  plot_bulktraj_with_moisturetake = False
   plot_bulktraj_with_startpoint_endpoint = False
-  plot_bulktraj_with_Delta_D = False
-  plot_bulktraj_with_Delta_O = False
-  get_cluster   = False
+  plot_bulktraj_with_Precipitable_Water_Delta18O = False
+  plot_bulktraj_with_Precipitable_Water_DeltaD = False
+  plot_bulktraj_with_Precipitation_Water_Delta18O = False
+  plot_bulktraj_with_Precipitation_Water_DeltaD = False
+  plot_bulktraj_with_Vapor_Water_Delta18O = False
+  plot_bulktraj_with_Vapor_Water_DeltaD = False
 /
 
 &plot
