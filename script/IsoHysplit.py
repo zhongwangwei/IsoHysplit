@@ -92,7 +92,7 @@ def main():
                          monthslice=slice(0, 32, 1), get_reverse=True,
                          get_clipped=True, hysplit=nml['general']['hysplit'])
     #get trajectory group
-    trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}*")
+    trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/traj/{nml['general']['basename']}*")
     #get min and max time
     min_time = pd.Timestamp.max
     max_time = pd.Timestamp.min
