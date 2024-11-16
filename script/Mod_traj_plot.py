@@ -97,7 +97,45 @@ def plot_bulktraj_with_humidity(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.
 
    # Save to netCDF file
    ds.to_netcdf(f'{output_dir}/Bulktraj_with_humidity.nc')
-   plt.show()
+   ##plt.show()
+
+def plot_bulktraj_with_pressure(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
+   fig,ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   standard_pm = None
+   colors = np.linspace(0.10, 0.9, trajgroup.trajcount)
+   bmap_params = MapDesign(mapcorners, standard_pm,latx=latx,lonx=lonx)
+   map_scatter  = bmap_params.make_basemap(ax=ax0)
+   allpressure = []
+   for traj in trajgroup:
+       allpressure.extend(traj.data.Pressure.astype(np.float64).values)
+    
+   vmin = np.nanpercentile(allpressure, 5)
+   vmax = np.nanpercentile(allpressure, 95)
+   # Round vmin and vmax to nearest 10
+   vmin = np.floor(vmin / 10) * 10
+   vmax = np.ceil(vmax / 10) * 10
+
+   for traj in trajgroup[::1]:
+      mappable = traj_scatter(
+         traj.data.Pressure.astype(np.float64).values,
+         traj.data.geometry.apply(lambda p: p.x).values,
+         traj.data.geometry.apply(lambda p: p.y).values,
+         map_scatter, colormap=plt.cm.viridis, # cnormalize='sqrt',
+         vmin=vmin, vmax=vmax, size=3,suppress_printmsg=True)
+
+   # Make colorbar on its own axis
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+   tick_fs=14, label_fs=16, cbar_label='Pressure (hPa)',
+                                    labelpad=12);
+   ticklabels = cbar.ax.get_xticklabels()
+   newlabels = []
+   # Create output directory if it doesn't exist
+   output_dir = f'{outdir}/plot_bulktraj_with_pressure'
+   os.makedirs(output_dir, exist_ok=True)
+   # Save the plot
+   plt.savefig(f'{output_dir}/plot_bulktraj_with_pressure.png', bbox_inches='tight', dpi=300)
+
 
 def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    for traj in trajgroup:
@@ -416,7 +454,6 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,l
    plt.savefig(f'{out_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
    del(ds,ds1)
 
-
 def plot_bulktraj_with_Delta_D(trajgroup,delta,mapcorners,latx=1.352,lonx=103.820):
    def process_point(ix, iy, tim, delta):
       # Find nearest time, lon, lat values in delta dataset
@@ -496,9 +533,8 @@ def plot_bulktraj_with_Delta_D(trajgroup,delta,mapcorners,latx=1.352,lonx=103.82
    # Save the plot
    output_dir = '../output/Delta_D'
    plt.savefig(f'{output_dir}/trajectory_delta_d.png', bbox_inches='tight', dpi=300)
-   plt.show()
+   #plt.show()
 
-   
 def plot_bulktraj_with_Delta(trajgroup,delta,varname,isotope_type,outdir,mapcorners,latx=1.352,lonx=103.820):
    def process_point(ix, iy, tim, delta):
       # Find nearest time, lon, lat values in delta dataset
@@ -589,9 +625,8 @@ def plot_bulktraj_with_Delta(trajgroup,delta,varname,isotope_type,outdir,mapcorn
 
    # Save the plot
    plt.savefig(f'{output_dir}/trajectory_delta_{varname}_{isotope_type}.png', bbox_inches='tight', dpi=300)
-   plt.show()
+   #plt.show()
 
-   
 def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,outdir,mapcorners,latx=1.352,lonx=103.820):
    def process_point(ix, iy, plev, tim, delta):
       # Find nearest time, lon, lat values in delta dataset
@@ -599,13 +634,13 @@ def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,out
       try:
          lat_idx = delta.lat.sel(lat=iy, method="nearest")
          lon_idx = delta.lon.sel(lon=ix, method="nearest")
-         level_idx = delta.level.sel(level=plev, method="nearest")
-         delta_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx, level=level_idx).values
+         level_idx = delta.levels.sel(levels=plev, method="nearest")
+         delta_value = delta.sel(time=time_idx, lat=lat_idx, lon=lon_idx, levels=level_idx).values
       except:
          lat_idx = delta.latitude.sel(latitude=iy, method="nearest")
          lon_idx = delta.longitude.sel(longitude=ix, method="nearest")
-         level_idx = delta.level.sel(level=plev, method="nearest")
-         delta_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx, level=level_idx).values
+         level_idx = delta.levels.sel(levels=plev, method="nearest")
+         delta_value = delta.sel(time=time_idx, latitude=lat_idx, longitude=lon_idx, levels=level_idx).values
       return delta_value
 
    # Add trajectory data
@@ -615,7 +650,6 @@ def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,out
       lats = traj.data.geometry.apply(lambda p: p.y).values
       times = traj.data.DateTime.values
       pressure = traj.data.Pressure.astype(np.float64).values
-      
       # Create a list to store delta_d values
       delta_values = Parallel(n_jobs=-1)(
           delayed(process_point)(ix, iy, plev, tim, delta)
@@ -686,4 +720,4 @@ def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,out
 
    # Save the plot
    plt.savefig(f'{output_dir}/trajectory_delta_{varname}_{isotope_type}.png', bbox_inches='tight', dpi=300)
-   plt.show()
+   #plt.show()

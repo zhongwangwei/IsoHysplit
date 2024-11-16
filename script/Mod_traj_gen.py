@@ -107,10 +107,8 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
 
     # Get directory information, make directories if necessary
     cwd = os.getcwd()
-
-    if not os.path.isdir(f"{output_dir}/traj"):
-        os.mkdir(f"{output_dir}/traj")
-    output_dir = f"{output_dir}/traj"
+    os.makedirs(f"{output_dir}/{basename}/traj", exist_ok=True) 
+    output_dir = f"{output_dir}/{basename}/traj"
     output_rdir = os.path.join(output_dir, 'reversetraj')
     output_cdir = os.path.join(output_dir, 'clippedtraj')
     meteo_dir = meteo_dir.replace('\\', '/')
