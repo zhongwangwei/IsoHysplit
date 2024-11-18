@@ -75,6 +75,11 @@ def preprocess_nml(namelist_file):
     return nml
 
 def main():
+    try:
+        namelist_file = sys.argv[1]
+    except:
+        namelist_file = '../namelist/main.nml'
+    '''
     if len(sys.argv) != 2:
         print("Usage: python IsoHysplit.py <namelist_file>")
         sys.exit(1)
@@ -83,7 +88,7 @@ def main():
     if not os.path.exists(namelist_file):
         print(f"Error: File {namelist_file} not found")
         sys.exit(1)
-        
+    '''    
     nml = preprocess_nml(namelist_file)
     lonx = nml['general']['location'][1]
     latx = nml['general']['location'][0]
