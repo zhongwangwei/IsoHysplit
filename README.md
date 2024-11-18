@@ -176,12 +176,6 @@ Common issues and solutions:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Citation
-
-If using this code in your research, please cite:
-1. Stein, et al. (2015) NOAA's HYSPLIT Atmospheric Transport and Dispersion Modeling System, BAMS
-2. The source projects (splitr, HyTraj, and PySPLIT)
-3. This package
 
 ## Contact
 
