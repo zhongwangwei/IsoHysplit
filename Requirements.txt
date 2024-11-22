@@ -5,9 +5,8 @@ matplotlib
 cartopy
 scikit-learn
 PyWavelets
-pyclustering
-fastcluster
 numpy
 scipy
 pandas
 xarray
+cftime
