@@ -11,7 +11,7 @@ This code benefits significantly from the following projects:
 
 ## Requirements
 
-- Python 3.x
+- >= Python 3.11
 - Required Python packages:
   ```
   numpy
