@@ -11,8 +11,7 @@ This code benefits significantly from the following projects:
 
 ## Requirements
 
-- Python 3.x
-- HYSPLIT installation
+- greater than Python 3.11
 - Required Python packages:
   ```
   numpy
