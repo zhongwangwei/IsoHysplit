@@ -977,15 +977,15 @@ class Trajectory(HyPath):
             else:
                 windows = self.data.index[:i + 1][::-interval]
 
-        self.uptake = gp.GeoDataFrame(data=np.empty((windows.size, 13)),
-                                      columns=['DateTime', 'Timestep',
-                                               'Cumulative_Dist',
-                                               'Avg_Pressure',
-                                               'Avg_MixDepth', 'q',
-                                               'dq_initial', 'dq', 'above',
-                                               'below', 'unknown_total',
-                                               'above_total', 'below_total'],
-                                      dtype=np.float64)
+        self.uptake = gp.GeoDataFrame(
+            data=np.empty((windows.size, 13)),
+            columns=[
+                'DateTime', 'Timestep', 'Cumulative_Dist', 'Avg_Pressure',
+                'Avg_MixDepth', 'q', 'dq_initial', 'dq', 'above', 'below',
+                'unknown_total', 'above_total', 'below_total'
+            ],
+            dtype=np.float64
+        )
 
         # Get all the timesteps, set as index
         self.uptake.loc[:, 'Timestep'] = windows[::-1]
@@ -993,7 +993,7 @@ class Trajectory(HyPath):
         self.uptake.set_index('Timestep', inplace=True, drop=False)
 
         # fill up with NaNs
-        self.uptake.loc[:, ['dq_initial', 'dq', 'above', 'below']] = None
+        self.uptake.loc[:, ['dq_initial', 'dq', 'above', 'below']] = np.nan
 
         # (fake) midpoint
         mdpt = interval // 2
@@ -1008,11 +1008,10 @@ class Trajectory(HyPath):
                               ['Pressure', 'Mixing_Depth']].mean())
 
         # First timestep
-        (self.uptake.loc[windows[0], 'DateTime'],
-         self.uptake.loc[windows[0], 'Cumulative_Dist'],
-         self.uptake.loc[windows[0], 'q']) = (
-            self.data.loc[windows[0], ['DateTime', 'Cumulative_Dist',
-                                       humidity]])
+        self.uptake.loc[windows[0], 'DateTime'] = pd.to_numeric(pd.Timestamp(self.data.loc[windows[0], 'DateTime']).value)
+        # No need to convert DateTime since it's already a Timestamp
+        self.uptake.loc[windows[0], 'Cumulative_Dist'] = self.data.loc[windows[0], 'Cumulative_Dist']
+        self.uptake.loc[windows[0], 'q'] = self.data.loc[windows[0], humidity]
 
         self.uptake.loc[windows[0], 'unknown_total'] = 1.0
         self.uptake.loc[windows[0], ['above_total', 'below_total']] = 0.0
@@ -1022,7 +1021,8 @@ class Trajectory(HyPath):
         for w in windows[1:]:
             (self.uptake.loc[w, 'DateTime'],
              self.uptake.loc[w, 'Cumulative_Dist']) = (
-                 self.data.loc[w - mdpt, ['DateTime', 'Cumulative_Dist']])
+                 pd.to_numeric(pd.Timestamp(self.data.loc[w - mdpt, 'DateTime']).value),
+                 self.data.loc[w - mdpt, 'Cumulative_Dist'])
 
             self.uptake.loc[w, 'q'] = self.data.loc[w, humidity]
 
@@ -1038,7 +1038,7 @@ class Trajectory(HyPath):
                 self.uptake.loc[w - interval, 'q'])
 
         # Set geometry for new gdf
-        self.uptake['geometry'] = points[::-1]
+        self.uptake = self.uptake.set_geometry(points[::-1])
 
         # Check that mixing depth data actually exists for this trajectory
         if self.data.loc[:, 'Mixing_Depth'].all(None):

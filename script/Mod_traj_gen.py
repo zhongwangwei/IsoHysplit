@@ -126,6 +126,9 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
 
     mon_dict = _mondict(n_hem=n_hemisphere)
 
+    # Convert months to integers if they're strings
+    months = [int(m) for m in months]
+
     try:
         os.chdir(hysplit_working)
 

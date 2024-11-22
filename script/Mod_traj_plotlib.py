@@ -848,7 +848,7 @@ class MapDesign(object):
                 self.proj = available_proj[projection]()
         else:
             self.proj = ccrs.PlateCarree()
-            print('Projection not recognized, defaulting to PlateCarree.')
+            #print('Projection not recognized, defaulting to PlateCarree.')
 
     def make_basemap(self, ax=None, figsize=(10, 10)):
         """Create a map using Cartopy."""

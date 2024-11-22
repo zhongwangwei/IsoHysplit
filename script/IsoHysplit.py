@@ -9,7 +9,7 @@ from Mod_traj_plot import *
 import pandas as pd
 import xarray as xr
 import glob
-
+from Mod_hycluster import get_cluster_Kmeans
 
 def preprocess_nml(namelist_file):
     """Main function to process namelist file"""
@@ -72,6 +72,16 @@ def preprocess_nml(namelist_file):
     nml['general']['meteo_dir'] = meteo_dir
     nml['general']['isotope_dir']=isotope_dir
 
+    # Read lon/lat bounds from namelist and ensure they are floats
+    maxlon = float(nml['plot']['maxlon'][0] if isinstance(nml['plot']['maxlon'], list) else nml['plot']['maxlon'])
+    minlon = float(nml['plot']['minlon'][0] if isinstance(nml['plot']['minlon'], list) else nml['plot']['minlon'])
+    maxlat = float(nml['plot']['maxlat'][0] if isinstance(nml['plot']['maxlat'], list) else nml['plot']['maxlat'])
+    minlat = float(nml['plot']['minlat'][0] if isinstance(nml['plot']['minlat'], list) else nml['plot']['minlat'])
+
+    # Reset map corners in format: [ll_lon, ll_lat, ur_lon, ur_lat]
+    nml['plot']['mapcorners'] = [minlon, minlat, maxlon, maxlat]
+   #mapcorners = 40, -20, 160, 45 #lower-left longitude, lower-left latitude
+
     return nml
 
 def main():
@@ -111,7 +121,16 @@ def main():
         else:
             os_type = 'Unknown'
             hysplit_exec = None
-        print(nml['general']['hysplit'])
+        # Convert months to 2-digit strings, ensuring we handle string inputs
+        nml['general']['months'] = [f"{int(month):02}" for month in nml['general']['months']]
+        print(nml['general']['months'])
+        
+        # Convert hours to 2-digit strings, ensuring we handle string inputs
+        nml['general']['hours'] = [f"{int(hour):02}" for hour in nml['general']['hours']]
+        print(nml['general']['hours'])
+
+
+        #
         # Set the HYSPLIT executable path from namelist
         hysplit_path = os.path.join(nml['general']['hysplit'][0], hysplit_exec)
         generate_bulktraj(nml['general']['basename'], nml['general']['working_dir'], nml['general']['storage_dir'], nml['general']['meteo_dir'],
@@ -138,6 +157,7 @@ def main():
 
     outdir=f"{nml['general']['storage_dir']}/{nml['general']['basename']}/"
     os.makedirs(outdir, exist_ok=True)
+    
 
     # Create list of isotope files for the year range
     if nml['general']['plot_bulktraj_with_humidity']:
@@ -148,7 +168,7 @@ def main():
     if nml['general']['plot_bulktraj_with_moisture_flux']:
         plot_bulktraj_with_moisture_flux(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
     
-    if nml['general']['plot_bulktraj_with_moisturetake']:
+    if nml['general']['plot_bulktraj_with_moistureuptake']:
         plot_bulktraj_with_moisturetake_new(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
     
     if nml['general']['plot_bulktraj_with_Precipitable_Water_Delta18O']:
@@ -269,6 +289,11 @@ def main():
             dd.name = 'dd'
             dd.to_netcdf(f"{isotope_dir}/Vapor_Water_DeltaD_{min_year}_{max_year}.nc", compute=True)
         plot_bulktraj_with_Delta_with_level(trajgroup,dd,'Vapor_Water','D',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)        
+
+    if nml['general']['get_cluster_Kmeans']:
+        files  = sorted(glob.glob(f"{nml['general']['storage_dir']}/{nml['general']['basename']}/traj/{nml['general']['basename']}*"))
+        clustering = get_cluster_Kmeans(files,mapcorners=nml['plot']['mapcorners'])
+
 
 if __name__ == "__main__":
     main()

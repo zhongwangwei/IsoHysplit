@@ -209,7 +209,7 @@ def plot_bulktraj_with_moisturetake(trajgroup,outdir, mapcorners,latx=1.352,lonx
       return idx
 
 
-   Intime=pd.date_range("2000-01-15",freq="1M",periods=1)
+   Intime=pd.date_range("2000-01-15",freq="1ME",periods=1)
    lat=np.arange(-89.5, 90.5, 1.0)
    lon=np.arange(-179.5, 180.5, 1.0)
    dq =np.zeros((1,180,360))
@@ -303,7 +303,7 @@ def plot_bulktraj_with_startpoint_endpoint(trajgroup,outdir,mapcorners,latx=1.35
       lon=np.arange(-179.875, 180, 0.25)
       dq =np.zeros((1,720,1440))
       #Intime=datetime.datetime(year=int(year),month=int(month),day=15)
-      Intime=pd.date_range("2000-01-15",freq="1M",periods=1)
+      Intime=pd.date_range("2000-01-15",freq="1ME",periods=1)
       lat=np.arange(-89.5, 90.5, 1.0)
       lon=np.arange(-179.5, 180.5, 1.0)
       sq =np.zeros((1,180,360))
@@ -389,7 +389,7 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,l
       return idx
 
 
-   Intime=pd.date_range("2000-01-15",freq="1M",periods=1)
+   Intime=pd.date_range("2000-01-15",freq="1ME",periods=1)
    lat=np.arange(-89, 90.5, 2.0)
    lon=np.arange(-179, 180.5, 2.0)
    dq =np.zeros((1,90,180))
