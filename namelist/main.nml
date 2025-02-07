@@ -1,7 +1,7 @@
 &general
   basename=Kunming
-  years=2005
-  months=4
+  startdate=20050401
+  enddate=20050402
   hours = 0, 3, 6, 9, 12, 15, 18, 21
   altitudes = 1500
   location = 25., 102.
@@ -11,7 +11,7 @@
   meteo_dir     = ../../../data/gdas1-new
   isotope_dir   = ../../../data/isogsm
   hysplit       = ../exec
-  get_bulktraj  = False  # whether calculate trajectories
+  get_bulktraj  = True  # set to True to generate trajectories
   plot_bulktraj_with_humidity = True
   plot_bulktraj_with_pressure = False
   plot_bulktraj_with_moisture_flux = False

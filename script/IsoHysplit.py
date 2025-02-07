@@ -105,10 +105,9 @@ def main():
     print(f"latx: {latx}, lonx: {lonx}")
     if nml['general']['get_bulktraj']:
         print('generating bulk trajectories')
-        # Check if operating system is Windows, Mac, or Linux and set appropriate HYSPLIT executable
+        # Determine OS and select appropriate HYSPLIT executable
         os_name = os.name
         platform_system = sys.platform
-
         if os_name == 'nt':
             os_type = 'Windows'
             hysplit_exec = 'hyts_std.exe'
@@ -121,25 +120,27 @@ def main():
         else:
             os_type = 'Unknown'
             hysplit_exec = None
-        # Convert months to 2-digit strings, ensuring we handle string inputs
-        nml['general']['months'] = [f"{int(month):02}" for month in nml['general']['months']]
-        print(nml['general']['months'])
-        
-        # Convert hours to 2-digit strings, ensuring we handle string inputs
+
+        # Convert hours to 2-digit strings just for consistency
         nml['general']['hours'] = [f"{int(hour):02}" for hour in nml['general']['hours']]
         print(nml['general']['hours'])
-
-
-        #
-        # Set the HYSPLIT executable path from namelist
+        
+        # Set the HYSPLIT executable path from the namelist
         hysplit_path = os.path.join(nml['general']['hysplit'][0], hysplit_exec)
-        generate_bulktraj(nml['general']['basename'], nml['general']['working_dir'], nml['general']['storage_dir'], nml['general']['meteo_dir'],
-                         nml['general']['years'], nml['general']['months'], 
-                         nml['general']['hours'], nml['general']['altitudes'], 
-                         nml['general']['location'],  
-                         nml['general']['runtime'],
-                         monthslice=slice(0, 32, 1), get_reverse=True,
-                         get_clipped=True, hysplit=hysplit_path)
+        # Call generate_bulktraj with startdate and enddate instead of years/months.
+        generate_bulktraj(nml['general']['basename'],
+                          nml['general']['working_dir'],
+                          nml['general']['storage_dir'],
+                          nml['general']['meteo_dir'],
+                          nml['general']['location'],
+                          nml['general']['runtime'],
+                          nml['general']['hours'],
+                          nml['general']['altitudes'],
+                          nml['general']['startdate'][0],
+                          nml['general']['enddate'][0],
+                          get_reverse=True,
+                          get_clipped=True,
+                          hysplit=hysplit_path)
     #get trajectory group
     trajgroup = make_trajectorygroup(f"{nml['general']['storage_dir']}/{nml['general']['basename']}/traj/{nml['general']['basename']}*")
     #get min and max time
