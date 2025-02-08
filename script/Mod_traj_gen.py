@@ -7,6 +7,7 @@ import fnmatch
 from calendar import monthrange
 from Mod_traj_util import (_populate_control, _try_to_remove,
                                    _day2filenum, _cliptraj)
+import datetime as dt
 
 def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, coordinates, run, hours, altitudes, startdate, enddate, meteoyr_2digits=True, outputyr_2digits=False, get_reverse=False, get_clipped=False, hysplit="../hyts_std"):
     """
@@ -47,9 +48,10 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, coordina
     
     """
     # Convert start/end dates to datetime objects
-    start_dt = dt.datetime.strptime(startdate, "%Y%m%d")
-    end_dt = dt.datetime.strptime(enddate, "%Y%m%d")
-    
+    #start_dt = dt.datetime.strptime(startdate, "%Y%m%d")
+    #end_dt = dt.datetime.strptime(enddate, "%Y%m%d")
+    start_dt = dt.datetime.strptime(str(startdate), "%Y%m%d")
+    end_dt = dt.datetime.strptime(str(enddate), "%Y%m%d")
     # Get directory information and create output subdirectories
     cwd = os.getcwd()
     traj_output_dir = os.path.join(output_dir, basename, "traj")
