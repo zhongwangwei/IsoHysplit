@@ -1,29 +1,29 @@
 &general
-  basename=Kunming
-  startdate=20050401
-  enddate=20050402
+  basename=Kunming2
+  startdate=20050501
+  enddate=20050502
   hours = 0, 3, 6, 9, 12, 15, 18, 21
   altitudes = 1500
   location = 25., 102.
   runtime = -240
   working_dir   = ../working
   storage_dir   = ../output/SG2
-  meteo_dir     = ../../../data/gdas1-new
-  isotope_dir   = ../../../data/isogsm
+  meteo_dir     = ../data/gdas1-new
+  isotope_dir   = ../data/isogsm
   hysplit       = ../exec
   get_bulktraj  = True  # set to True to generate trajectories
-  plot_bulktraj_with_humidity = True
+  plot_bulktraj_with_humidity = False
   plot_bulktraj_with_pressure = False
   plot_bulktraj_with_moisture_flux = False
   plot_bulktraj_with_moistureuptake = True
   plot_bulktraj_with_startpoint_endpoint = False
-  plot_bulktraj_with_Precipitable_Water_Delta18O = True
+  plot_bulktraj_with_Precipitable_Water_Delta18O = False
   plot_bulktraj_with_Precipitable_Water_DeltaD = False
   plot_bulktraj_with_Precipitation_Water_Delta18O = False
   plot_bulktraj_with_Precipitation_Water_DeltaD = False
   plot_bulktraj_with_Vapor_Water_Delta18O = False
   plot_bulktraj_with_Vapor_Water_DeltaD = False
-  get_cluster_Kmeans   = True
+  get_cluster_Kmeans   = False
 /
 
 &plot

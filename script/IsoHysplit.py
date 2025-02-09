@@ -154,7 +154,7 @@ def main():
     # Extract min and max years
     min_year = min_time.year
     max_year = max_time.year
-    print(f"Year range of trajectories: {min_year} to {max_year}")
+    print(f"Trajectory date range: {nml['general']['startdate'][0]} to {nml['general']['enddate'][0]}")
 
     outdir=f"{nml['general']['storage_dir']}/{nml['general']['basename']}/"
     os.makedirs(outdir, exist_ok=True)

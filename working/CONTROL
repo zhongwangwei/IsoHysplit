@@ -1,25 +1,25 @@
-05 04 20 21
+05 04 22 00
 1
--7.525 128.002 779.7
+24.854 49.976 5531.1
 240
 0
 10000.0
 8
-../Forcing/gdas1-new/
-gdas1.mar05.w4
-../Forcing/gdas1-new/
-gdas1.mar05.w5
-../Forcing/gdas1-new/
-gdas1.apr05.w1
-../Forcing/gdas1-new/
-gdas1.apr05.w2
-../Forcing/gdas1-new/
+../data/gdas1-new/
+gdas1.jun05.w1
+../data/gdas1-new/
+gdas1.may05.w2
+../data/gdas1-new/
+gdas1.may05.w5
+../data/gdas1-new/
+gdas1.may05.w4
+../data/gdas1-new/
+gdas1.may05.w3
+../data/gdas1-new/
 gdas1.apr05.w5
-../Forcing/gdas1-new/
+../data/gdas1-new/
 gdas1.apr05.w4
-../Forcing/gdas1-new/
-gdas1.apr05.w3
-../Forcing/gdas1-new/
+../data/gdas1-new/
 gdas1.may05.w1
 ./
-Singapore_ALT1000m.2005043021REVERSE
+Kunming2_ALT1500m.2005050200REVERSE
