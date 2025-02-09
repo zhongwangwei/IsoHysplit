@@ -59,8 +59,8 @@ Configure your analysis by editing the namelist file (main.nml). Example configu
 ```fortran
 &general
   basename=Singapore
-  years=2005
-  months=4
+  startdate=20050501
+  enddate=20050502
   hours = 0, 3, 6, 9, 12, 15, 18, 21
   altitudes = 1000
   location = 1.352, 103.820
