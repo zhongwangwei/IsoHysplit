@@ -136,7 +136,6 @@ def plot_bulktraj_with_pressure(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.
    # Save the plot
    plt.savefig(f'{output_dir}/plot_bulktraj_with_pressure.png', bbox_inches='tight', dpi=300)
 
-
 def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    for traj in trajgroup:
       traj.calculate_distance()
@@ -454,6 +453,145 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,l
    plt.savefig(f'{out_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
    del(ds,ds1)
 
+
+def plot_bulktraj_frequency(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import xarray as xr
+   import pandas as pd
+   from matplotlib import colors
+   import cartopy .crs as ccrs
+   import cartopy.feature as cfeature
+   from matplotlib import cm
+   from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+   import cartopy.feature as cfeature
+   import matplotlib
+   from pylab import rcParams
+
+   def find_nearest(array, value, k):
+      array = np.asarray(array)
+      idx = np.argsort(abs(array - value))[:k]
+      return idx
+
+
+   Intime=pd.date_range("2000-01-15",freq="1ME",periods=1)
+   lat=np.arange(-89.5, 90, 1.0)
+   lon=np.arange(-179.5, 180, 1.0)
+   frequency =np.zeros((1,180,360))
+   ds = xr.Dataset({'frequency': (('time','lat','lon'), frequency),},
+                  coords={'lon': lon, 'lat':lat,'time':(('time'),Intime)})
+
+   traj_frequency = []
+   for traj in trajgroup:
+      traj_frequency.append(traj)
+
+   for traj in traj_frequency:
+      x = traj.data.geometry.apply(lambda p: p.x).values
+      y = traj.data.geometry.apply(lambda p: p.y).values
+      for i, ix, iy in zip(range(len(x)), x, y):
+            iix = find_nearest(lon, ix, 1)
+            iiy = find_nearest(lat, iy, 1)
+            ds.frequency[0, iiy, iix] = ds.frequency[0, iiy, iix] + 1
+   ds1=ds.frequency/ds.frequency.sum()
+   out_dir = f'{outdir}/Trajectory_Frequency'
+   os.makedirs(out_dir, exist_ok=True)
+   ds.to_netcdf(f'{out_dir}/frequency.nc',engine='netcdf4')
+   ds1.to_netcdf(f'{out_dir}/frequency_fraction.nc',engine='netcdf4')
+
+
+   fig, ax0 = plt.subplots(figsize=(10, 7))
+   standard_pm = None
+   # Use the mapcorners provided as a parameter to the function
+   bmap_params = MapDesign(
+       mapcorners,          # using function input; do not hardcode!
+       standard_pm,
+       mapcolor=None,
+       latlon_spacing=(10, 10),
+       latlon_labelspacing=(10, 10),
+       lon_labels=["bottom"],
+       latlon_fs=15,
+       drawoutlines=True,
+       resolution="h",
+       area_threshold=100,
+       zmapbound=100
+   )
+
+   # Create the basemap without passing an axes object directly
+   bmap = bmap_params.make_basemap(ax=ax0)
+   bmap.add_feature(cfeature.LAND, facecolor="#d3d3d3", alpha=0.8)
+   bmap.add_feature(cfeature.OCEAN, facecolor="white", alpha=0.8)
+
+   # (Optional) Add a scatter marker – modify the coordinates as appropriate for your data
+   bmap.scatter(lonx, latx, marker="^", c="yellow", zorder=20, s=100,
+                edgecolors="black", linewidths=1.5)
+
+   # If your dataset ds.lon and ds.lat are 1D arrays, create a meshgrid for contouring.
+   X, Y = np.meshgrid(ds.lon, ds.lat)
+   contour_levels = [2, 5, 10, 20]
+   cs = bmap.contour(
+       X, Y, ds.frequency[0],
+       levels=contour_levels,
+       colors=("darkseagreen", "yellowgreen", "darkorange", "indianred"),
+       linewidths=3
+   )
+
+   # Use transformed coordinates for proper positioning in the lower-right corner
+   transform = ax0.transAxes
+   
+   # Define position: adjust for better visibility in lower right
+   x_pos = 0.95    # 95% from left
+   y_start = 0.15  # 15% from bottom
+   y_spacing = 0.05  # Increased from 0.035 for larger line spacing
+
+   # Create a single background box for all legend items
+   legend_text = (
+       f"Frequency > {contour_levels[3]}%\n"
+       f"Frequency > {contour_levels[2]}%\n"
+       f"Frequency > {contour_levels[1]}%\n"
+       f"Frequency > {contour_levels[0]}%"
+   )
+
+   # Define colors for each line
+   colors = ["indianred", "darkorange", "yellowgreen", "darkseagreen"]
+
+   # Create the background box with multiple lines of colored text
+   bbox_props = dict(
+       boxstyle='round,pad=0.5',
+       fc='white',      # face color
+       ec='gray',       # edge color
+       alpha=0.8        # transparency
+   )
+
+   # Split the text into lines and add each line with its own color
+   lines = legend_text.split('\n')
+   y_pos = y_start + y_spacing * (len(lines) - 1)  # Start from top
+   
+   for line, color in zip(lines, colors):
+       plt.text(x_pos - 0.23, y_pos, line,  # Moved x position left for left alignment
+               fontsize=17, color=color,
+               ha='left',  # Changed from 'right' to 'left'
+               va='center',
+               transform=ax0.transAxes, zorder=1000)
+       y_pos -= y_spacing
+
+   # Add a background box that encompasses all text
+   # Calculate the box position and size
+   box_height = y_spacing * (len(lines) + 0.5)  # Add some padding
+   box = plt.Rectangle(
+       (x_pos - 0.25, y_start - 0.02),  # Keep original box position
+       0.27, box_height,
+       transform=ax0.transAxes,
+       facecolor='white',
+       edgecolor='gray',
+       alpha=0.8,
+       zorder=999
+   )
+   ax0.add_patch(box)
+
+   plt.savefig(f'{out_dir}/trajectory_frequency.png', bbox_inches="tight", dpi=300)
+
+   del(ds,ds1)
+
 def plot_bulktraj_with_Delta_D(trajgroup,delta,mapcorners,latx=1.352,lonx=103.820):
    def process_point(ix, iy, tim, delta):
       # Find nearest time, lon, lat values in delta dataset
@@ -721,3 +859,4 @@ def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,out
    # Save the plot
    plt.savefig(f'{output_dir}/trajectory_delta_{varname}_{isotope_type}.png', bbox_inches='tight', dpi=300)
    #plt.show()
+

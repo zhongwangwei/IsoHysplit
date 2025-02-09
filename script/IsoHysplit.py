@@ -171,7 +171,10 @@ def main():
     
     if nml['general']['plot_bulktraj_with_moistureuptake']:
         plot_bulktraj_with_moisturetake_new(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
-    
+        
+    if nml['general']['plot_bulktraj_frequency']:
+        plot_bulktraj_frequency(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+
     if nml['general']['plot_bulktraj_with_Precipitable_Water_Delta18O']:
         isotope_dir = nml['general']['isotope_dir']
         try:
