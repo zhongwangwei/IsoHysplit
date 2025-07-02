@@ -1,25 +1,25 @@
-05 04 22 00
+20 09 26 00
 1
-24.854 49.976 5531.1
+3.344 116.523 104.3
 240
 0
 10000.0
 8
 ../data/gdas1-new/
-gdas1.jun05.w1
+gdas1.oct20.w4
 ../data/gdas1-new/
-gdas1.may05.w2
+gdas1.oct20.w3
 ../data/gdas1-new/
-gdas1.may05.w5
+gdas1.oct20.w2
 ../data/gdas1-new/
-gdas1.may05.w4
+gdas1.oct20.w5
 ../data/gdas1-new/
-gdas1.may05.w3
+gdas1.nov20.w1
 ../data/gdas1-new/
-gdas1.apr05.w5
+gdas1.sep20.w5
 ../data/gdas1-new/
-gdas1.apr05.w4
+gdas1.sep20.w4
 ../data/gdas1-new/
-gdas1.may05.w1
+gdas1.oct20.w1
 ./
-Kunming2_ALT1500m.2005050200REVERSE
+test-August_27_October_06_6000m_ALT6000m.2020100600REVERSE

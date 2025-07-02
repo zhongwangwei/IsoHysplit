@@ -1,0 +1,13 @@
+     8     1
+    GDAS    20     5    22     0     0
+    GDAS    20     5    29     0     0
+    GDAS    20     6     1     0     0
+    GDAS    20     6     8     0     0
+    GDAS    20     6    15     0     0
+    GDAS    20     6    22     0     0
+    GDAS    20     6    29     0     0
+    GDAS    20     7     1     0     0
+     1 BACKWARD OMEGA   
+    20     6    25     9   26.630   99.730  9000.0
+    10 PRESSURE THETA    AIR_TEMP RAINFALL MIXDEPTH RELHUMID SPCHUMID H2OMIXRA TERR_MSL SUN_FLUX
+     1     1    20     6    25     9     0     3     0.0   26.630   99.730   9000.0    223.4    356.2    232.0      0.0    781.3     67.4      0.4      0.4   2677.5    713.8

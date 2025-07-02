@@ -6,6 +6,7 @@ import pywt
 from sklearn.cluster import KMeans
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import os
 
 class HyData:
     def __init__(self, files):
@@ -237,15 +238,17 @@ class ClusterPlot:
 
 
 class get_cluster_Kmeans:
-    def __init__(self, files, mapcorners):
+    def __init__(self, files, mapcorners, save_figure=True, figure_path='trajectory_clusters.png', save_data=True, data_path='./'):
         self.files = files
         self.data = HyData(files).read()
         self.labels = HyCluster(self.data).fit(kmax=10, method="KMeans")
+        out_dir = f'{data_path}/Cluster'
+        os.makedirs(out_dir, exist_ok=True)
         # Plot the clusters
         plot_corners = [mapcorners[0], mapcorners[2], mapcorners[1], mapcorners[3]]
-        self.plot_clusters(plot_corners)
+        self.plot_clusters(plot_corners, save_figure, figure_path, save_data, data_path, out_dir)
          
-    def plot_clusters(self,mapcorners):
+    def plot_clusters(self, mapcorners, save_figure=True, figure_path='trajectory_clusters.png', save_data=True, data_path='cluster_data.nc', out_dir=None):
         # Create the map projection
         fig = plt.figure(figsize=(12, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
@@ -261,5 +264,70 @@ class get_cluster_Kmeans:
         ax = cluster_plot.plot_representative_trajectories(ax=ax)
         
         plt.title('Trajectory Clusters')
+        
+        # Save the figure if requested
+        if save_figure:
+            if out_dir:
+                figure_path = os.path.join(out_dir, os.path.basename(figure_path))
+            plt.savefig(figure_path, dpi=300, bbox_inches='tight')
+            print(f"Cluster figure saved to: {figure_path}")
+        
         plt.show()
+        
+        # Save the dataset if requested
+        if save_data:
+            # Get the representative trajectories from ClusterPlot
+            cluster_plot = ClusterPlot(self.data, self.labels)
+            rep_lat, rep_lon, kcount = cluster_plot.get_representative_trajectories()
+            
+            # Create a dataset with the representative trajectories
+            cluster_plot_data = xr.Dataset()
+            
+            # Add representative trajectories for each cluster
+            for i, cluster_name in enumerate(rep_lat.columns):
+                # Get the representative trajectory data
+                lat_traj = rep_lat[cluster_name].values
+                lon_traj = rep_lon[cluster_name].values
+                
+                # Create timestep coordinates (assuming same length as original data)
+                timesteps = np.arange(len(lat_traj))
+                
+                # Add to dataset
+                cluster_plot_data[f'{cluster_name}_latitude'] = xr.DataArray(
+                    data=lat_traj,
+                    dims=['timestep'],
+                    coords={'timestep': timesteps},
+                    attrs={'long_name': f'Representative latitude for {cluster_name}',
+                           'units': 'degrees_north',
+                           'trajectory_count': int(kcount[i])}
+                )
+                
+                cluster_plot_data[f'{cluster_name}_longitude'] = xr.DataArray(
+                    data=lon_traj,
+                    dims=['timestep'],
+                    coords={'timestep': timesteps},
+                    attrs={'long_name': f'Representative longitude for {cluster_name}',
+                           'units': 'degrees_east',
+                           'trajectory_count': int(kcount[i])}
+                )
+            
+            # Add cluster statistics
+            cluster_plot_data.attrs['title'] = 'HYSPLIT Representative Trajectory Clusters'
+            cluster_plot_data.attrs['description'] = 'Representative trajectories for each cluster showing the mean path'
+            cluster_plot_data.attrs['n_clusters'] = int(self.labels.nunique().values[0])
+            cluster_plot_data.attrs['cluster_method'] = 'KMeans'
+            cluster_plot_data.attrs['creation_date'] = str(pd.Timestamp.now())
+            cluster_plot_data.attrs['total_trajectories'] = int(sum(kcount))
+            
+            # Add cluster counts as attributes
+            for i, count in enumerate(kcount):
+                cluster_plot_data.attrs[f'cluster_{i+1}_count'] = int(count)
+            
+            # Save to NetCDF file
+            if out_dir:
+                data_path = os.path.join(out_dir, 'cluster_plot_data.nc')
+            cluster_plot_data.to_netcdf(data_path)
+            print(f"Cluster plot data saved to: {data_path}")
+            
+            return cluster_plot_data
         

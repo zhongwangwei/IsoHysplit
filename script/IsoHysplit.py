@@ -165,6 +165,8 @@ def main():
         plot_bulktraj_with_humidity(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
     if nml['general']['plot_bulktraj_with_pressure']:
         plot_bulktraj_with_pressure(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+    if nml['general']['plot_bulktraj_with_temperature']:
+        plot_bulktraj_with_temperature(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
     
     if nml['general']['plot_bulktraj_with_moisture_flux']:
         plot_bulktraj_with_moisture_flux(trajgroup,outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
@@ -292,11 +294,85 @@ def main():
                     dd=(ds['spfh2prs']/ds['spfhprs']-1.)*1000.
             dd.name = 'dd'
             dd.to_netcdf(f"{isotope_dir}/Vapor_Water_DeltaD_{min_year}_{max_year}.nc", compute=True)
-        plot_bulktraj_with_Delta_with_level(trajgroup,dd,'Vapor_Water','D',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)        
+        plot_bulktraj_with_Delta_with_level(trajgroup,dd,'Vapor_Water','D',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)      
+
+    if nml['general']['plot_bulktraj_with_Vapor_Water_D_excess']:
+        isotope_dir = nml['general']['isotope_dir']
+        try:
+            with xr.open_dataset(f"{isotope_dir}/Vapor_Water_D_excess_{min_year}_{max_year}.nc") as ds:
+                dex=ds['dex']
+        except:
+            print(f"failed to open {isotope_dir}/Vapor_Water_D_excess_{min_year}_{max_year}.nc")
+            isotope_files = [f"{isotope_dir}/g{year}iso-n_pgb.nc" for year in range(min_year, max_year + 1)]
+            print(f"Loading isotope files: {isotope_files}")
+            isotope_files.sort()
+            if len(isotope_files) == 1:
+                with xr.open_dataset(isotope_files[0]) as ds:
+                    dd=(ds['spfh2prs']/ds['spfhprs']-1.)*1000.
+                    do=(ds['spfh1prs']/ds['spfhprs']-1.)*1000.
+                    dex=dd-8*do
+            else:
+                with xr.open_mfdataset(isotope_files, parallel=True, combine='by_coords') as ds:
+                    dd=(ds['spfh2prs']/ds['spfhprs']-1.)*1000.
+                    do=(ds['spfh1prs']/ds['spfhprs']-1.)*1000.
+                    dex=dd-8*do
+            dex.name = 'dex'
+            dex.to_netcdf(f"{isotope_dir}/Vapor_Water_D_excess_{min_year}_{max_year}.nc", compute=True)
+        plot_bulktraj_with_Delta_with_level(trajgroup,dex,'Vapor_Water','D_excess',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+
+
+    if nml['general']['plot_bulktraj_with_Precipitation_Water_D_excess']:
+        isotope_dir = nml['general']['isotope_dir']
+        try:
+            with xr.open_dataset(f"{isotope_dir}/Precipitation_Water_D_excess_{min_year}_{max_year}.nc") as ds:
+                dd=ds['dd']
+        except:
+            print(f"failed to open {isotope_dir}/Precipitation_Water_D_excess_{min_year}_{max_year}.nc")
+            isotope_files = [f"{isotope_dir}/g{year}iso-n.nc" for year in range(min_year, max_year + 1)]
+            print(f"Loading isotope files: {isotope_files}")
+            isotope_files.sort()
+            if len(isotope_files) == 1:
+                with xr.open_dataset(isotope_files[0]) as ds:
+                    dd=(ds['prate2']/ds['prate']-1.)*1000.
+                    do=(ds['prate1']/ds['prate']-1.)*1000.
+                    dex=dd-8*do
+            else:
+                with xr.open_mfdataset(isotope_files, parallel=True, combine='by_coords') as ds:
+                    dd=(ds['prate2']/ds['prate']-1.)*1000.
+                    do=(ds['prate1']/ds['prate']-1.)*1000.
+                    dex=dd-8*do
+            dex.name = 'dex'
+            dex.to_netcdf(f"{isotope_dir}/Precipitation_Water_D_excess_{min_year}_{max_year}.nc", compute=True)
+        plot_bulktraj_with_Delta(trajgroup,dex,'Precipitation_Water','D_excess',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
+
+
+    if nml['general']['plot_bulktraj_with_Precipitable_Water_D_excess']:
+        isotope_dir = nml['general']['isotope_dir']
+        try:
+            with xr.open_dataset(f"{isotope_dir}/Precipitable_Water_D_excess_{min_year}_{max_year}.nc") as ds:
+                dex=ds['dex']
+        except:
+            print(f"failed to open {isotope_dir}/Precipitable_Water_D_excess_{min_year}_{max_year}.nc")
+            isotope_files = [f"{isotope_dir}/g{year}iso-n.nc" for year in range(min_year, max_year + 1)]
+            print(f"Loading isotope files: {isotope_files}")
+            isotope_files.sort()
+            if len(isotope_files) == 1:
+                with xr.open_dataset(isotope_files[0]) as ds:
+                    dd=(ds['pwat2clm']/ds['pwatclm']-1.)*1000.
+                    do=(ds['pwat1clm']/ds['pwatclm']-1.)*1000.
+                    dex=dd-8*do
+            else:
+                with xr.open_mfdataset(isotope_files, parallel=True, combine='by_coords') as ds:
+                    dd=(ds['pwat2clm']/ds['pwatclm']-1.)*1000.
+                    do=(ds['pwat1clm']/ds['pwatclm  ']-1.)*1000.
+                    dex=dd-8*do
+            dex.name = 'dex'
+            dex.to_netcdf(f"{isotope_dir}/Precipitable_Water_D_excess_{min_year}_{max_year}.nc", compute=True)
+        plot_bulktraj_with_Delta(trajgroup,dex,'Precipitable_Water','D_excess',outdir,nml['plot']['mapcorners'],latx=latx,lonx=lonx)
 
     if nml['general']['get_cluster_Kmeans']:
         files  = sorted(glob.glob(f"{nml['general']['storage_dir']}/{nml['general']['basename']}/traj/{nml['general']['basename']}*"))
-        clustering = get_cluster_Kmeans(files,mapcorners=nml['plot']['mapcorners'])
+        clustering = get_cluster_Kmeans(files,mapcorners=nml['plot']['mapcorners'],save_figure=True,figure_path='trajectory_clusters.png',save_data=True,data_path=outdir)
 
 
 if __name__ == "__main__":

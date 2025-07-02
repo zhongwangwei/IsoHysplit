@@ -44,6 +44,15 @@ def plot_bulktraj_with_humidity(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.
    (Shapely ``LineString``) xy coordinates.
 
    """
+   allspec_hum = []
+   for traj in trajgroup:
+       allspec_hum.extend(traj.data.Specific_Humidity.astype(np.float64).values)
+    
+   vmin = np.nanpercentile(allspec_hum, 5)
+   vmax = np.nanpercentile(allspec_hum, 95)
+   # Round vmin and vmax to nearest 10
+   vmin = np.floor(vmin / 10) * 10
+   vmax = np.ceil(vmax / 10) * 10
 
    for traj in trajgroup[::1]:
       mappable = traj_scatter(
@@ -51,7 +60,7 @@ def plot_bulktraj_with_humidity(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.
          traj.data.geometry.apply(lambda p: p.x).values,
          traj.data.geometry.apply(lambda p: p.y).values,
          map_scatter, colormap=plt.cm.viridis, # cnormalize='sqrt',
-         vmin=0.0, vmax=20.0, size=3,suppress_printmsg=True)
+         vmin=vmin, vmax=vmax, size=3,suppress_printmsg=True)
    # Make colorbar on its own axis
    cax_position = [0.2, 0.1, 0.6, 0.05]
    cax, cbar = make_cax_cbar(fig, cax_position, mappable,
@@ -95,7 +104,7 @@ def plot_bulktraj_with_humidity(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.
                   'longitude': ('Timestep', lons)}
        )
 
-   # Save to netCDF file
+      # Save to netCDF file
    ds.to_netcdf(f'{output_dir}/Bulktraj_with_humidity.nc')
    ##plt.show()
 
@@ -136,6 +145,141 @@ def plot_bulktraj_with_pressure(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.
    # Save the plot
    plt.savefig(f'{output_dir}/plot_bulktraj_with_pressure.png', bbox_inches='tight', dpi=300)
 
+   # Create dataset from trajectory group
+   ds = xr.Dataset()
+   
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+       # Extract coordinates and data
+       lons = traj.data.geometry.apply(lambda p: p.x).values
+       lats = traj.data.geometry.apply(lambda p: p.y).values
+       pressure = traj.data.Pressure.astype(np.float64).values
+       altitude = traj.data.geometry.apply(lambda p: p.z).values
+       
+       # Add to dataset with trajectory number as dimension
+       ds[f'trajectory_{i}_pressure'] = xr.DataArray(
+           data=pressure,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+       
+       ds[f'trajectory_{i}_altitude'] = xr.DataArray(
+           data=altitude,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+
+   # Save to netCDF file
+   ds.to_netcdf(f'{output_dir}/Bulktraj_with_pressure.nc')
+
+def plot_bulktraj_with_temperature(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
+ 
+   fig,ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   #param_dict = {'projection':'lcc', 'latlon_labelspacing':(10,30),
+   #               'latlon_spacing':(10,15), 'latlon_fs':14}
+   standard_pm = None
+
+   """
+   Plotting ``Trajectory`` Paths
+   -----------------------------
+   For this example, we will color-code by initialization (t=0) altitude,
+   (500, 1000, or 1500 m), which can be accessed via ``Trajectory.data.geometry``,
+   a ``GeoSeries`` of Shapely ``Point`` objects.
+
+   We can store the trajectory color in ``Trajectory.trajcolor`` for convenience.
+
+   """
+   #color_dict = {
+   #              1000.0 : 'orange'
+   #              }
+   colors = np.linspace(0.10, 0.9, trajgroup.trajcount)
+
+   #bmap_params = pysplit.MapDesign(mapcorners, standard_pm,** param_dict)
+   bmap_params = MapDesign(mapcorners, standard_pm,latx=latx,lonx=lonx)
+
+   """
+   Once the ``MapDesign`` is initialized it can be used to draw a map:
+
+   """
+   map_scatter  = bmap_params.make_basemap(ax=ax0)
+   #for traj in trajgroup:
+   #    altitude0 = traj.data.geometry.apply(lambda p: p.z)[0]
+   #    traj.trajcolor = color_dict[altitude0]
+
+   """
+   For display purposes, let's plot only every fifth ``Trajectory``.  The lats,
+   lons are obtained by unpacking the ``Trajectory.Path``
+   (Shapely ``LineString``) xy coordinates.
+
+   """
+   alltemperature = []
+   for traj in trajgroup:
+       alltemperature.extend(traj.data.Temperature.astype(np.float64).values)
+    
+   vmin = np.nanpercentile(alltemperature, 5)
+   vmax = np.nanpercentile(alltemperature, 95)
+   # Round vmin and vmax to nearest 10
+   vmin = np.floor(vmin / 10) * 10
+   vmax = np.ceil(vmax / 10) * 10
+
+   for traj in trajgroup[::1]:
+      mappable = traj_scatter(
+         traj.data.Temperature.astype(np.float64).values,
+         traj.data.geometry.apply(lambda p: p.x).values,
+         traj.data.geometry.apply(lambda p: p.y).values,
+         map_scatter, colormap=plt.cm.viridis, # cnormalize='sqrt',
+         vmin=vmin, vmax=vmax,
+         size=3,suppress_printmsg=True)
+   # Make colorbar on its own axis
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+   tick_fs=14, label_fs=16, cbar_label='Temperature (K)',
+                                    labelpad=12);
+   ticklabels = cbar.ax.get_xticklabels()
+   newlabels = []
+   # Create output directory if it doesn't exist
+   output_dir = f'{outdir}/plot_bulktraj_with_temperature'
+   os.makedirs(output_dir, exist_ok=True)
+
+   # Save the plot
+   plt.savefig(f'{output_dir}/plot_bulktraj_with_temperature.png', bbox_inches='tight', dpi=300)
+
+   
+   # Create dataset from trajectory group
+   ds = xr.Dataset()
+   
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+       # Extract coordinates and data
+       lons = traj.data.geometry.apply(lambda p: p.x).values
+       lats = traj.data.geometry.apply(lambda p: p.y).values
+       temperature = traj.data.Temperature.astype(np.float64).values
+       pressure = traj.data.Pressure.astype(np.float64).values
+       
+       # Add to dataset with trajectory number as dimension
+       ds[f'trajectory_{i}_temperature'] = xr.DataArray(
+           data=temperature,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+       
+       ds[f'trajectory_{i}_pressure'] = xr.DataArray(
+           data=pressure,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+
+   # Save to netCDF file
+   ds.to_netcdf(f'{output_dir}/Bulktraj_with_temperature.nc')
+
 def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    for traj in trajgroup:
       traj.calculate_distance()
@@ -160,14 +304,15 @@ def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx
    bmap_params = MapDesign(mapcorners, standard_pm,latx=latx,lonx=lonx)
 
    map_scatter  = bmap_params.make_basemap(ax=ax0)
-
-   min_mf = 0
-   max_mf = 200
+   allmoistureflux = []
    for traj in trajgroup:
-      if traj.data.Moisture_Flux.max() > max_mf:
-         max_mf = traj.data.Moisture_Flux.max()
-      if traj.data.Moisture_Flux.min() < min_mf:
-         min_mf = traj.data.Moisture_Flux.min()
+       allmoistureflux.extend(traj.data.Moisture_Flux.astype(np.float64).values)
+    
+   vmin = np.nanpercentile(allmoistureflux, 5)
+   vmax = np.nanpercentile(allmoistureflux, 95)
+   # Round vmin and vmax to nearest 10
+   vmin = np.floor(vmin / 10) * 10
+   vmax = np.ceil(vmax / 10) * 10
 
    for traj in trajgroup[::1]:
       mappable = traj_scatter(
@@ -175,7 +320,7 @@ def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx
          traj.data.geometry.apply(lambda p: p.x).values,
          traj.data.geometry.apply(lambda p: p.y).values,
          map_scatter, colormap=plt.cm.viridis, # cnormalize='sqrt',
-         vmin=min_mf, vmax=200.0, size=3,suppress_printmsg=True)
+         vmin=vmin, vmax=vmax, size=3,suppress_printmsg=True)
    # Make colorbar on its own axis
    cax_position = [0.2, 0.1, 0.6, 0.05]
    cax, cbar = make_cax_cbar(fig, cax_position, mappable,
@@ -187,6 +332,37 @@ def plot_bulktraj_with_moisture_flux(trajgroup,outdir,mapcorners,latx=1.352,lonx
    os.makedirs(output_dir, exist_ok=True)
 
    plt.savefig(f'{output_dir}/Moisture_Flux.png', bbox_inches='tight', dpi=300)
+
+   # Create dataset from trajectory group
+   ds = xr.Dataset()
+   
+   # Add trajectory data
+   for i, traj in enumerate(trajgroup):
+       # Extract coordinates and data
+       lons = traj.data.geometry.apply(lambda p: p.x).values
+       lats = traj.data.geometry.apply(lambda p: p.y).values
+       moisture_flux = traj.data.Moisture_Flux.astype(np.float64).values
+       pressure = traj.data.Pressure.astype(np.float64).values
+       
+       # Add to dataset with trajectory number as dimension
+       ds[f'trajectory_{i}_moisture_flux'] = xr.DataArray(
+           data=moisture_flux,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+       
+       ds[f'trajectory_{i}_pressure'] = xr.DataArray(
+           data=pressure,
+           dims=['Timestep'],
+           coords={'Timestep': traj.data.index,
+                  'latitude': ('Timestep', lats),
+                  'longitude': ('Timestep', lons)}
+       )
+
+   # Save to netCDF file
+   ds.to_netcdf(f'{output_dir}/Bulktraj_with_moisture_flux.nc')
 
 def plot_bulktraj_with_moisturetake(trajgroup,outdir, mapcorners,latx=1.352,lonx=103.820):
    import matplotlib.pyplot as plt
@@ -243,7 +419,7 @@ def plot_bulktraj_with_moisturetake(trajgroup,outdir, mapcorners,latx=1.352,lonx
             iix=find_nearest(lon, ix, 1)
             iiy=find_nearest(lat, iy, 1)
             ds.dq[0,iiy,iix]=ds.dq[0,iiy,iix]+np.nan_to_num(traj.uptake.dq.astype(np.float64).values[i].flatten())
-   ds1=ds.dq/ds.dq.sum()
+   ds1=ds.dq/ds.dq.sum()*100.
    out_dir = f'{outdir}/Moisture_Take'
    os.makedirs(out_dir, exist_ok=True)
    ds.to_netcdf(f'{out_dir}/moisturetake.nc',engine='netcdf4')
@@ -287,7 +463,48 @@ def plot_bulktraj_with_moisturetake(trajgroup,outdir, mapcorners,latx=1.352,lonx
    plt.tight_layout()
    # Save the plot
    plt.savefig(f'{out_dir}/moisturetake.png', bbox_inches='tight', dpi=300)
-   del(ds,ds1)
+
+   del(ds)
+   # Plot moisture take fraction
+   fig = plt.figure()
+   ef, ax = plt.subplots(1,1,figsize=(10,5),subplot_kw={'projection': ccrs.PlateCarree()})
+
+   # Convert mapcorners to float if they are strings
+   mapcorners = [float(x) for x in mapcorners]
+
+   ax.set_extent(mapcorners, crs=ccrs.PlateCarree())
+   ax.add_feature(cfeature.LAND)
+   ax.add_feature(cfeature.OCEAN)
+   ax.add_feature(cfeature.COASTLINE)
+   #ax.add_feature(cfeature.BORDERS, linestyle=':')
+   ax.add_feature(cfeature.LAKES, alpha=0.5)
+   ax.add_feature(cfeature.RIVERS)
+
+   # Generate ticks based on mapcorners [lonmin, lonmax, latmin, latmax]
+   lon_ticks = np.arange(np.floor(mapcorners[0]/10)*10, 
+                        np.ceil(mapcorners[1]/10)*10, 10)
+   lat_ticks = np.arange(np.floor(mapcorners[2]/5)*5,
+                        np.ceil(mapcorners[3]/5)*5, 5)
+   
+   ax.set_xticks(lon_ticks, crs=ccrs.PlateCarree())
+   ax.set_yticks(lat_ticks, crs=ccrs.PlateCarree())
+   lon_formatter = LongitudeFormatter(zero_direction_label=True)
+   lat_formatter = LatitudeFormatter()
+   ax.xaxis.set_major_formatter(lon_formatter)
+   ax.yaxis.set_major_formatter(lat_formatter)
+
+   # Use auto levels for fraction plot
+   #ds1=xr.open_dataset("test_fraction.nc",decode_times=False)
+   ds1.dq.plot(ax=ax, cbar_kwargs={"label": "Fraction of total moisture uptake (%)"})
+
+   ax.set_title("")
+   ax.set_xlabel("")
+   # Make it nice
+   plt.tight_layout()
+   # Save the plot
+   plt.savefig(f'{out_dir}/moisturetake_fraction.png', bbox_inches='tight', dpi=300)
+
+   del(ds1)
 
 def plot_bulktraj_with_startpoint_endpoint(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    import numpy as np
@@ -423,7 +640,7 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,l
             iix=find_nearest(lon, ix, 1)
             iiy=find_nearest(lat, iy, 1)
             ds.dq[0,iiy,iix]=ds.dq[0,iiy,iix]+np.nan_to_num(traj.uptake.dq.astype(np.float64).values[i].flatten())
-   ds1=ds.dq/ds.dq.sum()
+   ds1=ds.dq/ds.dq.sum()*100.
    out_dir = f'{outdir}/Moisture_Take'
    os.makedirs(out_dir, exist_ok=True)
    ds.to_netcdf(f'{out_dir}/moisturetake.nc',engine='netcdf4')
@@ -437,8 +654,6 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,l
    # Plot the data using pcolormesh instead of contourf to avoid interpolation
    levels = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
    mappable = map_scatter.pcolormesh(ds.lon, ds.lat, ds.dq[0], 
-                                    vmin=min(levels), 
-                                    vmax=max(levels),
                                     cmap='viridis')
    
    # Add colorbar
@@ -451,8 +666,32 @@ def plot_bulktraj_with_moisturetake_new(trajgroup,outdir,mapcorners,latx=1.352,l
 
 
    plt.savefig(f'{out_dir}/moisturetake_new.png', bbox_inches='tight', dpi=300)
-   del(ds,ds1)
+   del(ds)
+   #close the figure
+   plt.close()
+   # Plot moisture take fraction
+   fig, ax0 = plt.subplots(nrows=1, figsize=(10,7))
+   standard_pm = None
+   bmap_params = MapDesign(mapcorners, standard_pm, latx=latx, lonx=lonx)
+   map_scatter = bmap_params.make_basemap(ax=ax0)
+   
+   # Plot the data using pcolormesh instead of contourf to avoid interpolation
+   levels = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+   mappable = map_scatter.pcolormesh(ds1.lon, ds1.lat, ds1[0], 
+                                    cmap='viridis')
+   
+   # Add colorbar
+   cax_position = [0.2, 0.1, 0.6, 0.05]
+   cax, cbar = make_cax_cbar(fig, cax_position, mappable,
+       tick_fs=14, label_fs=16, 
+       cbar_label='Accumulated moisture take fraction(%)',
+       labelpad=12)
+   # Save the plot
+   plt.savefig(f'{out_dir}/moisturetake_fraction_new.png', bbox_inches='tight', dpi=300)
 
+   del(ds1)
+   #close the figure
+   plt.close()
 
 def plot_bulktraj_frequency(trajgroup,outdir,mapcorners,latx=1.352,lonx=103.820):
    import matplotlib.pyplot as plt
@@ -712,12 +951,14 @@ def plot_bulktraj_with_Delta(trajgroup,delta,varname,isotope_type,outdir,mapcorn
        lons = traj.data.geometry.apply(lambda p: p.x).values
        lats = traj.data.geometry.apply(lambda p: p.y).values
        delta = traj.data[f'Delta_{isotope_type}'].astype(np.float64).values
+       pressure = traj.data.Pressure.astype(np.float64).values
        
        # Add to dataset with trajectory number as dimension
        ds[f'trajectory_{i}_delta_{isotope_type}'] = xr.DataArray(
            data=delta,
            dims=['Timestep'],
            coords={'Timestep': traj.data.index,
+                  'pressure': ('Timestep', pressure),
                   'latitude': ('Timestep', lats),
                   'longitude': ('Timestep', lons)}
        )
@@ -765,6 +1006,7 @@ def plot_bulktraj_with_Delta(trajgroup,delta,varname,isotope_type,outdir,mapcorn
    plt.savefig(f'{output_dir}/trajectory_delta_{varname}_{isotope_type}.png', bbox_inches='tight', dpi=300)
    #plt.show()
 
+
 def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,outdir,mapcorners,latx=1.352,lonx=103.820):
    def process_point(ix, iy, plev, tim, delta):
       # Find nearest time, lon, lat values in delta dataset
@@ -806,6 +1048,7 @@ def plot_bulktraj_with_Delta_with_level(trajgroup,delta,varname,isotope_type,out
       lons = traj.data.geometry.apply(lambda p: p.x).values
       lats = traj.data.geometry.apply(lambda p: p.y).values
       delta = traj.data[f'Delta_{isotope_type}'].astype(np.float64).values
+      pressure = traj.data.Pressure.astype(np.float64).values
       
       # Add to dataset with trajectory number as dimension
       ds[f'trajectory_{i}_delta_{isotope_type}'] = xr.DataArray(
