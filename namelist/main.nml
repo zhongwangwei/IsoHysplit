@@ -6,11 +6,11 @@
   altitudes = 6000
   location = 26.63, 99.73
   runtime = -240
-  working_dir   = ../working
-  storage_dir   = ../output/
-  meteo_dir     = ../data/gdas1-new
-  isotope_dir   = ../data/isogsm
-  hysplit       = ../exec
+  working_dir   = working
+  storage_dir   = output/
+  meteo_dir     = data/gdas1-new
+  isotope_dir   = data/isogsm
+  hysplit       = exec
   get_bulktraj  = False  # set to True to generate trajectories
   plot_bulktraj_with_humidity = False
   plot_bulktraj_with_pressure = False
@@ -31,7 +31,7 @@
   plot_bulktraj_with_Precipitation_Water_D_excess=True
   plot_bulktraj_with_Precipitable_Water_D_excess = True
 
-  get_cluster_Kmeans   = False
+  get_cluster_Kmeans   = True
 /
 
 &plot
